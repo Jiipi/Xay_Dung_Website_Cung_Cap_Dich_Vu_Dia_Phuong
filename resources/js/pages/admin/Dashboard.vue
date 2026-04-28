@@ -15,6 +15,7 @@ import {
     UserPlus,
 } from 'lucide-vue-next';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import { useAnimations } from '@/composables/useAnimations';
 
 interface KpiCards {
     totalUsers: number;
@@ -304,6 +305,14 @@ function drawDonutChart() {
     ctx.fillText('người dùng', cx, cy + 14);
 }
 
+// ─── Animations ─────────────────────────────────────────────
+const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const heroHeadline = ref<HTMLElement | null>(null);
+const heroDesc = ref<HTMLElement | null>(null);
+const heroButtons = ref<HTMLElement | null>(null);
+const heroStats = ref<HTMLElement | null>(null);
+const contentSections = ref<HTMLElement[]>([]);
+
 // ─── Mount ──────────────────────────────────────────────────
 onMounted(async () => {
     await nextTick();
@@ -319,6 +328,18 @@ onMounted(async () => {
     window.addEventListener('resize', () => {
         drawRevenueChart();
         drawDonutChart();
+    });
+
+    animateHeroEntrance({
+        headline: heroHeadline,
+        description: heroDesc,
+        searchBar: heroButtons,
+        stats: heroStats,
+    });
+
+    animateStagger('.kpi-container', '.kpi-card');
+    contentSections.value.forEach(el => {
+        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
     });
 });
 </script>
@@ -337,17 +358,17 @@ onMounted(async () => {
                             <Sparkles class="size-4 text-sky-300" />
                             <span class="text-xs font-bold uppercase tracking-[0.2em] text-sky-300/80">Admin Panel</span>
                         </div>
-                        <h1 class="text-2xl font-black text-white md:text-3xl">
+                        <h1 ref="heroHeadline" class="text-2xl font-black text-white md:text-3xl">
                             {{ greeting }}, {{ adminName }}!
                         </h1>
-                        <p class="mt-2 text-sm text-slate-400 max-w-md">
+                        <p ref="heroDesc" class="mt-2 text-sm text-slate-400 max-w-md">
                             Hệ thống đang hoạt động ổn định.
                             <template v-if="kpiCards.pendingOrders > 0 || kpiCards.pendingServices > 0">
                                 Có <strong class="text-amber-400">{{ kpiCards.pendingOrders + kpiCards.pendingServices }}</strong> mục cần xử lý.
                             </template>
                         </p>
                     </div>
-                    <div class="flex gap-3">
+                    <div ref="heroButtons" class="flex gap-3">
                         <Link
                             href="/admin/services"
                             class="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15"
@@ -365,87 +386,74 @@ onMounted(async () => {
             </div>
 
             <!-- ═══ KPI Cards ═══ -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div ref="heroStats" class="kpi-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-[2rem] border border-stone-200 bg-white shadow-sm overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-stone-100">
                 <!-- Users -->
-                <div class="admin-kpi-card group">
-                    <div class="admin-kpi-card__glow admin-kpi-card__glow--sky" />
-                    <div class="relative">
-                        <div class="mb-3 flex items-center justify-between">
-                            <div class="admin-kpi-card__icon admin-kpi-card__icon--sky">
-                                <Users class="size-5" />
-                            </div>
-                            <span
-                                class="flex items-center gap-0.5 text-xs font-semibold"
-                                :class="kpiCards.usersChangePercent >= 0 ? 'text-emerald-400' : 'text-red-400'"
-                            >
-                                <ArrowUpRight v-if="kpiCards.usersChangePercent >= 0" class="size-3.5" />
-                                <ArrowDownRight v-else class="size-3.5" />
-                                {{ Math.abs(kpiCards.usersChangePercent) }}%
-                            </span>
+                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
+                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-sky-400/10 blur-3xl transition duration-500 group-hover:bg-sky-400/20"></div>
+                    <div class="relative z-10 mb-3 flex items-center justify-between">
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                            <Users class="size-5" />
                         </div>
-                        <p class="text-2xl font-bold text-stone-800">{{ animatedValues.totalUsers }}</p>
-                        <p class="mt-1 text-sm text-stone-500">Tổng người dùng</p>
+                        <span class="flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.usersChangePercent >= 0 ? 'text-emerald-500' : 'text-red-500'">
+                            <ArrowUpRight v-if="kpiCards.usersChangePercent >= 0" class="size-3.5" />
+                            <ArrowDownRight v-else class="size-3.5" />
+                            {{ Math.abs(kpiCards.usersChangePercent) }}%
+                        </span>
                     </div>
+                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Tổng người dùng</p>
+                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.totalUsers }}</p>
                 </div>
 
                 <!-- Services -->
-                <div class="admin-kpi-card group">
-                    <div class="admin-kpi-card__glow admin-kpi-card__glow--emerald" />
-                    <div class="relative">
-                        <div class="mb-3 flex items-center justify-between">
-                            <div class="admin-kpi-card__icon admin-kpi-card__icon--emerald">
-                                <Package class="size-5" />
-                            </div>
+                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
+                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-emerald-400/10 blur-3xl transition duration-500 group-hover:bg-emerald-400/20"></div>
+                    <div class="relative z-10 mb-3 flex items-center justify-between">
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                            <Package class="size-5" />
                         </div>
-                        <p class="text-2xl font-bold text-stone-800">{{ animatedValues.totalServices }}</p>
-                        <p class="mt-1 text-sm text-stone-500">Tổng dịch vụ</p>
-                        <p class="mt-1.5 text-xs text-amber-400">{{ kpiCards.pendingServices }} dịch vụ chờ duyệt</p>
+                        <span v-if="kpiCards.pendingServices > 0" class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-600 ring-1 ring-amber-500/20">
+                            {{ kpiCards.pendingServices }} chờ duyệt
+                        </span>
                     </div>
+                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Tổng dịch vụ</p>
+                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.totalServices }}</p>
                 </div>
 
                 <!-- Revenue -->
-                <div class="admin-kpi-card group">
-                    <div class="admin-kpi-card__glow admin-kpi-card__glow--violet" />
-                    <div class="relative">
-                        <div class="mb-3 flex items-center justify-between">
-                            <div class="admin-kpi-card__icon admin-kpi-card__icon--violet">
-                                <DollarSign class="size-5" />
-                            </div>
-                            <span
-                                class="flex items-center gap-0.5 text-xs font-semibold"
-                                :class="kpiCards.revenueChangePercent >= 0 ? 'text-emerald-400' : 'text-red-400'"
-                            >
-                                <TrendingUp class="size-3.5" />
-                                {{ kpiCards.revenueChangePercent >= 0 ? '+' : '' }}{{ kpiCards.revenueChangePercent }}%
-                            </span>
+                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
+                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-violet-400/10 blur-3xl transition duration-500 group-hover:bg-violet-400/20"></div>
+                    <div class="relative z-10 mb-3 flex items-center justify-between">
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                            <DollarSign class="size-5" />
                         </div>
-                        <p class="text-2xl font-bold text-stone-800">{{ formatVND(animatedValues.totalRevenue) }}</p>
-                        <p class="mt-1 text-sm text-stone-500">Doanh thu</p>
+                        <span class="flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.revenueChangePercent >= 0 ? 'text-emerald-500' : 'text-red-500'">
+                            <TrendingUp class="size-3.5" />
+                            {{ kpiCards.revenueChangePercent >= 0 ? '+' : '' }}{{ kpiCards.revenueChangePercent }}%
+                        </span>
                     </div>
+                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Doanh thu</p>
+                    <p class="relative z-10 mt-2 font-serif text-3xl sm:text-4xl text-stone-900">{{ formatVND(animatedValues.totalRevenue) }}</p>
                 </div>
 
                 <!-- Pending -->
-                <div class="admin-kpi-card group">
-                    <div class="admin-kpi-card__glow admin-kpi-card__glow--amber" />
-                    <div class="relative">
-                        <div class="mb-3 flex items-center justify-between">
-                            <div class="admin-kpi-card__icon admin-kpi-card__icon--amber">
-                                <Clock class="size-5" />
-                            </div>
-                            <span v-if="kpiCards.pendingOrders > 0" class="admin-kpi-card__pulse">
-                                <span class="admin-kpi-card__pulse-ring" />
-                                <span class="admin-kpi-card__pulse-dot" />
-                            </span>
+                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
+                    <div v-if="kpiCards.pendingOrders > 0" class="absolute -bottom-10 -right-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
+                    <div class="relative z-10 mb-3 flex items-center justify-between">
+                        <div class="flex size-10 items-center justify-center rounded-xl" :class="kpiCards.pendingOrders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'">
+                            <Clock class="size-5" />
                         </div>
-                        <p class="text-2xl font-bold text-stone-800">{{ animatedValues.pendingOrders }}</p>
-                        <p class="mt-1 text-sm text-stone-500">Chờ phê duyệt</p>
-                        <p v-if="kpiCards.pendingOrders > 0" class="mt-1.5 text-xs text-amber-400">⚡ Cần hành động</p>
+                        <span v-if="kpiCards.pendingOrders > 0" class="relative flex size-3">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex size-3 rounded-full bg-amber-500"></span>
+                        </span>
                     </div>
+                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em]" :class="kpiCards.pendingOrders > 0 ? 'text-amber-600' : 'text-stone-500'">Chờ phê duyệt</p>
+                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.pendingOrders }}</p>
                 </div>
             </div>
 
             <!-- ═══ Charts Row ═══ -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div ref="contentSections" class="grid grid-cols-1 gap-6 lg:grid-cols-5">
                 <!-- Revenue Chart -->
                 <div class="admin-card lg:col-span-3">
                     <div class="admin-card__header">
@@ -494,7 +502,7 @@ onMounted(async () => {
             </div>
 
             <!-- ═══ Order Status + Recent Orders ═══ -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div ref="contentSections" class="grid grid-cols-1 gap-6 lg:grid-cols-5">
                 <!-- Order Status Bars -->
                 <div class="admin-card lg:col-span-2">
                     <div class="admin-card__header">
@@ -569,7 +577,7 @@ onMounted(async () => {
             </div>
 
             <!-- ═══ Recent Users ═══ -->
-            <div class="admin-card">
+            <div ref="contentSections" class="admin-card">
                 <div class="admin-card__header">
                     <div class="flex items-center gap-3">
                         <div class="rounded-lg bg-sky-500/10 p-2">
@@ -655,84 +663,6 @@ onMounted(async () => {
     background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 60%);
 }
 
-/* KPI Cards */
-.admin-kpi-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 1.5rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    padding: 1.25rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.admin-kpi-card:hover {
-    border-color: #d6d3d1;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-}
-.admin-kpi-card__glow {
-    position: absolute;
-    top: -2rem;
-    right: -2rem;
-    width: 6rem;
-    height: 6rem;
-    border-radius: 50%;
-    opacity: 0;
-    transition: all 0.4s ease;
-}
-.admin-kpi-card:hover .admin-kpi-card__glow {
-    opacity: 1;
-    transform: scale(1.3);
-}
-.admin-kpi-card__glow--sky { background: radial-gradient(circle, rgba(56,189,248,0.08), transparent); }
-.admin-kpi-card__glow--emerald { background: radial-gradient(circle, rgba(52,211,153,0.08), transparent); }
-.admin-kpi-card__glow--violet { background: radial-gradient(circle, rgba(139,92,246,0.08), transparent); }
-.admin-kpi-card__glow--amber { background: radial-gradient(circle, rgba(245,158,11,0.08), transparent); }
-
-.admin-kpi-card__icon {
-    display: flex;
-    width: 2.5rem;
-    height: 2.5rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-}
-.admin-kpi-card__icon--sky { background: rgba(56,189,248,0.1); color: #0284c7; }
-.admin-kpi-card__icon--emerald { background: rgba(52,211,153,0.1); color: #059669; }
-.admin-kpi-card__icon--violet { background: rgba(139,92,246,0.1); color: #7c3aed; }
-.admin-kpi-card__icon--amber { background: rgba(245,158,11,0.1); color: #d97706; }
-
-.admin-kpi-card:hover .admin-kpi-card__icon {
-    transform: scale(1.1);
-}
-
-.admin-kpi-card__pulse {
-    position: relative;
-    display: flex;
-    width: 0.625rem;
-    height: 0.625rem;
-}
-.admin-kpi-card__pulse-ring {
-    position: absolute;
-    display: inline-flex;
-    width: 100%;
-    height: 100%;
-    border-radius: 9999px;
-    background: #f59e0b;
-    opacity: 0.75;
-    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-.admin-kpi-card__pulse-dot {
-    position: relative;
-    display: inline-flex;
-    width: 0.625rem;
-    height: 0.625rem;
-    border-radius: 9999px;
-    background: #fbbf24;
-}
-
 @keyframes ping {
     75%, 100% { transform: scale(2); opacity: 0; }
 }
@@ -776,7 +706,6 @@ onMounted(async () => {
 }
 
 /* Override text colors for light theme */
-.admin-kpi-card :deep(.text-white),
 .admin-card :deep(.text-white) {
     color: #1c1917;
 }

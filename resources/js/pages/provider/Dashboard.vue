@@ -25,6 +25,7 @@ import {
 } from 'lucide-vue-next';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import { useAnimations } from '@/composables/useAnimations';
 
 // ─── Props from Controller ───────────────────────────────────
 interface KpiCards {
@@ -294,10 +295,33 @@ function animateChart() {
     requestAnimationFrame(step);
 }
 
+// ─── Animations ──────────────────────────────────────────────
+const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const heroBadge = ref<HTMLElement | null>(null);
+const heroHeadline = ref<HTMLElement | null>(null);
+const heroDesc = ref<HTMLElement | null>(null);
+const heroButtons = ref<HTMLElement | null>(null);
+const heroStats = ref<HTMLElement | null>(null);
+const contentSections = ref<HTMLElement[]>([]);
+
 onMounted(async () => {
     await nextTick();
     animateChart();
     window.addEventListener('resize', drawChart);
+
+    animateHeroEntrance({
+        badge: heroBadge,
+        headline: heroHeadline,
+        description: heroDesc,
+        searchBar: heroButtons,
+        stats: heroStats,
+    });
+    
+    animateStagger('.action-grid', '.action-card');
+    animateStagger('.quick-links', '.quick-link');
+    contentSections.value.forEach(el => {
+        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
+    });
 });
 </script>
 
@@ -314,15 +338,15 @@ onMounted(async () => {
 
                 <div class="relative z-10 grid gap-8 px-6 py-12 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
                     <div class="flex flex-col justify-center">
-                        <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
+                        <div ref="heroBadge" class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
                             <Sparkles class="size-4" />
                             Bảng điều khiển nhà cung cấp
                         </div>
-                        <h1 class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
+                        <h1 ref="heroHeadline" class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
                             Chào {{ firstName }}, <br><em class="opacity-85 font-serif italic">kinh doanh tại Đà Lạt</em>
                         </h1>
-                        <p class="mt-4 max-w-2xl text-base leading-7 text-amber-50 sm:text-lg">{{ heroSummary }}</p>
-                        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <p ref="heroDesc" class="mt-4 max-w-2xl text-base leading-7 text-amber-50 sm:text-lg">{{ heroSummary }}</p>
+                        <div ref="heroButtons" class="mt-8 flex flex-col gap-3 sm:flex-row">
                             <Link href="/provider/bookings" class="btn inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-orange-950 transition hover:bg-stone-100">
                                 <ClipboardList class="size-4" />
                                 Xem đơn hàng
@@ -334,30 +358,42 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-2 content-center">
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-amber-100">Tổng doanh thu</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ formatVND(kpiCards.totalRevenue) }}</p>
+                    <div ref="heroStats" class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                        <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-amber-100/70">
+                                <DollarSign class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Tổng doanh thu</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ formatVND(kpiCards.totalRevenue) }}</p>
                             <span class="mt-2 inline-flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.revenueChangePercent >= 0 ? 'text-emerald-300' : 'text-red-300'">
                                 <ArrowUpRight v-if="kpiCards.revenueChangePercent >= 0" class="size-3.5" />
                                 <ArrowDownRight v-else class="size-3.5" />
                                 {{ Math.abs(kpiCards.revenueChangePercent) }}%
                             </span>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-amber-100">Đơn hàng</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ kpiCards.totalOrders }}</p>
-                            <p class="mt-2 text-xs text-amber-200">+{{ kpiCards.ordersThisMonth }} tháng này</p>
+                        <div class="border-b border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-amber-100/70">
+                                <Package class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Đơn hàng</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ kpiCards.totalOrders }}</p>
+                            <p class="mt-2 text-xs text-amber-200/70">+{{ kpiCards.ordersThisMonth }} tháng này</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-amber-200">Chờ xác nhận</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ kpiCards.pendingOrders }}</p>
-                            <p class="mt-2 text-xs text-amber-200">Cần xử lý ngay</p>
+                        <div class="group relative overflow-hidden border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div v-if="kpiCards.pendingOrders > 0" class="absolute -bottom-10 -left-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2" :class="kpiCards.pendingOrders > 0 ? 'text-amber-300' : 'text-amber-100/70'">
+                                <Clock class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Chờ xác nhận</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ kpiCards.pendingOrders }}</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-amber-100">Đánh giá</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ kpiCards.avgRating }} <span class="text-lg text-amber-300">★</span></p>
-                            <p class="mt-2 text-xs text-amber-200">{{ kpiCards.totalReviews }} đánh giá</p>
+                        <div class="p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-amber-100/70">
+                                <Star class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Đánh giá</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ kpiCards.avgRating }} <span class="text-lg text-amber-300">★</span></p>
+                            <p class="mt-2 text-xs text-amber-200/70">{{ kpiCards.totalReviews }} đánh giá</p>
                         </div>
                     </div>
                 </div>
@@ -365,7 +401,7 @@ onMounted(async () => {
 
             <!-- ══════ Action Items + Quick Links ══════ -->
             <div class="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Cần xử lý</p>
@@ -373,8 +409,8 @@ onMounted(async () => {
                         </div>
                         <Link href="/provider/bookings" class="hidden items-center gap-1 text-sm font-semibold text-orange-700 sm:flex">Mở đơn hàng <ChevronRight class="size-4" /></Link>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2">
-                        <Link v-for="item in actionItems" :key="item.title" :href="item.href" class="group rounded-[1.5rem] border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-5 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-md">
+                    <div class="action-grid mt-6 grid gap-4 md:grid-cols-2">
+                        <Link v-for="item in actionItems" :key="item.title" :href="item.href" class="action-card group rounded-[1.5rem] border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-5 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-md">
                             <div class="flex size-12 items-center justify-center rounded-2xl bg-white text-stone-700 shadow-sm">
                                 <component :is="item.icon" class="size-5" />
                             </div>
@@ -386,7 +422,7 @@ onMounted(async () => {
                 </section>
 
                 <div class="space-y-6">
-                    <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                    <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Đi nhanh</p>
@@ -394,8 +430,8 @@ onMounted(async () => {
                             </div>
                             <div class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-500">{{ kpiCards.pendingOrders }} chờ</div>
                         </div>
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                            <Link v-for="link in quickLinks" :key="link.href" :href="link.href" class="group flex items-center gap-3 rounded-[1.25rem] border border-stone-200 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/50">
+                        <div class="quick-links mt-5 grid gap-3 sm:grid-cols-2">
+                            <Link v-for="link in quickLinks" :key="link.href" :href="link.href" class="quick-link group flex items-center gap-3 rounded-[1.25rem] border border-stone-200 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/50">
                                 <div class="flex size-10 items-center justify-center rounded-2xl bg-stone-100 text-stone-700"><component :is="link.icon" class="size-5" /></div>
                                 <span class="min-w-0 flex-1 text-sm font-semibold text-stone-900">{{ link.title }}</span>
                                 <ChevronRight class="size-4 text-stone-400 transition group-hover:text-orange-700" />
@@ -434,7 +470,7 @@ onMounted(async () => {
             <!-- ══════ Revenue Chart + Upcoming Appointments ══════ -->
             <div class="mt-8 grid gap-6 lg:grid-cols-5">
                 <!-- Revenue Chart -->
-                <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-3">
+                <section ref="contentSections" class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-3">
                     <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Biểu đồ</p>
@@ -502,7 +538,7 @@ onMounted(async () => {
             </div>
 
             <!-- ══════ Recent Orders ══════ -->
-            <section class="mt-8 overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+            <section ref="contentSections" class="mt-8 overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Gần đây</p>

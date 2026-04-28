@@ -18,9 +18,10 @@ import {
     User,
     XCircle,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onMounted, ref, nextTick } from 'vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
+import { useAnimations } from '@/composables/useAnimations';
 
 type Stats = { totalBookings: number; completedBookings: number; pendingBookings: number; upcomingBookings: number; reviewPendingCount: number; totalFavorites: number; unreadNotifications: number };
 type Booking = { id: number; code: string; service: string; provider: string; date: string; time: string; status: string; statusLabel: string; price: number; image: string; hasReview: boolean };
@@ -89,6 +90,32 @@ const profileChecks = computed(() => [
     { label: 'Số điện thoại', value: props.profile.phone || 'Nên bổ sung để liên hệ nhanh', done: Boolean(props.profile.phone) },
     { label: 'Địa chỉ', value: props.profile.address || 'Nên bổ sung để đặt dịch vụ tại nhà nhanh hơn', done: Boolean(props.profile.address) },
 ]);
+
+// ─── Animations ─────────────────────────────────────────────
+const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const heroBadge = ref<HTMLElement | null>(null);
+const heroHeadline = ref<HTMLElement | null>(null);
+const heroDesc = ref<HTMLElement | null>(null);
+const heroButtons = ref<HTMLElement | null>(null);
+const heroStats = ref<HTMLElement | null>(null);
+const contentSections = ref<HTMLElement[]>([]);
+
+onMounted(async () => {
+    await nextTick();
+    animateHeroEntrance({
+        badge: heroBadge,
+        headline: heroHeadline,
+        description: heroDesc,
+        searchBar: heroButtons,
+        stats: heroStats,
+    });
+    
+    animateStagger('.action-grid', '.action-card');
+    animateStagger('.quick-links', '.quick-link');
+    contentSections.value.forEach(el => {
+        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
+    });
+});
 </script>
 
 <template>
@@ -103,15 +130,15 @@ const profileChecks = computed(() => [
                 
                 <div class="relative z-10 grid gap-8 px-6 py-12 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
                     <div class="flex flex-col justify-center">
-                        <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
+                        <div ref="heroBadge" class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
                             <Sparkles class="size-4" />
                             Trang chủ khách hàng
                         </div>
-                        <h1 class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
+                        <h1 ref="heroHeadline" class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
                             Chào {{ firstName }}, dịch vụ Đà Lạt <br><em class="opacity-85 font-serif italic">ngay trong tầm tay</em>
                         </h1>
-                        <p class="mt-4 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">{{ heroSummary }}</p>
-                        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <p ref="heroDesc" class="mt-4 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">{{ heroSummary }}</p>
+                        <div ref="heroButtons" class="mt-8 flex flex-col gap-3 sm:flex-row">
                             <Link href="/services" class="btn inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-emerald-950 transition hover:bg-stone-100">
                                 <Compass class="size-4" />
                                 Tìm dịch vụ mới
@@ -123,7 +150,7 @@ const profileChecks = computed(() => [
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                    <div ref="heroStats" class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
                         <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-emerald-100/70">
                                 <ClipboardList class="size-4" />
@@ -158,7 +185,7 @@ const profileChecks = computed(() => [
             </section>
 
             <div class="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Cần xử lý</p>
@@ -166,8 +193,8 @@ const profileChecks = computed(() => [
                         </div>
                         <Link href="/customer/bookings" class="hidden items-center gap-1 text-sm font-semibold text-emerald-700 sm:flex">Mở lịch sử <ChevronRight class="size-4" /></Link>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2">
-                        <Link v-for="item in actionItems" :key="item.title" :href="item.href" class="group rounded-[1.5rem] border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-5 transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md">
+                    <div class="action-grid mt-6 grid gap-4 md:grid-cols-2">
+                        <Link v-for="item in actionItems" :key="item.title" :href="item.href" class="action-card group rounded-[1.5rem] border border-stone-200 bg-gradient-to-br from-stone-50 to-white p-5 transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md">
                             <div class="flex size-12 items-center justify-center rounded-2xl bg-white text-stone-700 shadow-sm">
                                 <component :is="item.icon" class="size-5" />
                             </div>
@@ -179,7 +206,7 @@ const profileChecks = computed(() => [
                 </section>
 
                 <div class="space-y-6">
-                    <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                    <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Đi nhanh</p>
@@ -187,8 +214,8 @@ const profileChecks = computed(() => [
                             </div>
                             <div class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-500">{{ props.stats.unreadNotifications }} mới</div>
                         </div>
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                            <Link v-for="link in quickLinks" :key="link.href" :href="link.href" class="group flex items-center gap-3 rounded-[1.25rem] border border-stone-200 px-4 py-4 transition hover:border-emerald-200 hover:bg-emerald-50/50">
+                        <div class="quick-links mt-5 grid gap-3 sm:grid-cols-2">
+                            <Link v-for="link in quickLinks" :key="link.href" :href="link.href" class="quick-link group flex items-center gap-3 rounded-[1.25rem] border border-stone-200 px-4 py-4 transition hover:border-emerald-200 hover:bg-emerald-50/50">
                                 <div class="flex size-10 items-center justify-center rounded-2xl bg-stone-100 text-stone-700"><component :is="link.icon" class="size-5" /></div>
                                 <span class="min-w-0 flex-1 text-sm font-semibold text-stone-900">{{ link.title }}</span>
                                 <ChevronRight class="size-4 text-stone-400 transition group-hover:text-emerald-700" />
@@ -218,7 +245,7 @@ const profileChecks = computed(() => [
                 </div>
             </div>
 
-            <section class="mt-8 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+            <section ref="contentSections" class="mt-8 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Sắp diễn ra</p>
@@ -259,7 +286,7 @@ const profileChecks = computed(() => [
             </section>
 
             <div class="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Gần đây</p>
@@ -307,7 +334,7 @@ const profileChecks = computed(() => [
                     </Deferred>
                 </section>
 
-                <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Gợi ý cho bạn</p>
