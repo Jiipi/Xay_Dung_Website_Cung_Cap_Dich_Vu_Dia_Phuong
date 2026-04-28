@@ -123,22 +123,35 @@ const profileChecks = computed(() => [
                         </div>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-2 content-center">
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-emerald-100">Tổng booking</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ props.stats.totalBookings }}</p>
+                    <div class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                        <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-emerald-100/70">
+                                <ClipboardList class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Tổng booking</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.totalBookings }}</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-emerald-100">Lịch sắp tới</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ props.stats.upcomingBookings }}</p>
+                        <div class="border-b border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-emerald-100/70">
+                                <Calendar class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Lịch sắp tới</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.upcomingBookings }}</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-amber-200">Chờ xác nhận</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ props.stats.pendingBookings }}</p>
+                        <div class="group relative overflow-hidden border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
+                            <div v-if="props.stats.pendingBookings > 0" class="absolute -bottom-10 -left-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2" :class="props.stats.pendingBookings > 0 ? 'text-amber-300' : 'text-emerald-100/70'">
+                                <CalendarClock class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Chờ xác nhận</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ props.stats.pendingBookings }}</p>
                         </div>
-                        <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm card">
-                            <p class="text-sm font-medium text-emerald-100">Đã lưu</p>
-                            <p class="mt-2 font-serif text-4xl text-white">{{ props.stats.totalFavorites }}</p>
+                        <div class="p-5 sm:p-6 transition hover:bg-white/5">
+                            <div class="flex items-center gap-2 text-emerald-100/70">
+                                <Heart class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Đã lưu</p>
+                            </div>
+                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.totalFavorites }}</p>
                         </div>
                     </div>
                 </div>
