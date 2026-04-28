@@ -1,0 +1,122 @@
+/* ============================================================
+   DALAT SERVICES — Design Tokens
+   Laravel 12 + Vue 3 + Tailwind CSS
+   ============================================================ */
+
+:root {
+  /* ===== BRAND ĐÀ LẠT ===== */
+  --dl-brand:             #2d6a4f;   /* Xanh thông — màu chính */
+  --dl-brand-hover:       #1b4332;
+  --dl-brand-light:       #52b788;
+  --dl-brand-surface:     #d8f3dc;   /* background nhạt của brand */
+
+  --dl-accent:            #e76f51;   /* Cam đất — CTA, highlight */
+  --dl-accent-hover:      #d4502e;
+  --dl-accent-surface:    #fde8e2;
+
+  --dl-warm-bg:           #f8f5f0;   /* Kem ấm — bg tổng thể */
+  --dl-warm-surface:      #ffffff;
+  --dl-warm-border:       #e8e3db;
+
+  /* ===== PHÂN BIỆT ROLE ===== */
+  --dl-customer:          #2d6a4f;   /* Xanh thông */
+  --dl-customer-surface:  #d8f3dc;
+  --dl-provider:          #e76f51;   /* Cam đất */
+  --dl-provider-surface:  #fde8e2;
+  --dl-admin:             #1d3557;   /* Xanh navy */
+  --dl-admin-surface:     #d6e4f0;
+
+  /* ===== STATUS COLORS ===== */
+  --dl-pending:           #e9c46a;   /* Vàng — chờ xác nhận */
+  --dl-pending-surface:   #fdf6e3;
+  --dl-pending-text:      #7c5a00;
+  --dl-confirmed:         #2d6a4f;   /* Xanh — đã xác nhận */
+  --dl-confirmed-surface: #d8f3dc;
+  --dl-confirmed-text:    #1b4332;
+  --dl-completed:         #52b788;   /* Xanh nhạt — hoàn thành */
+  --dl-completed-surface: #d8f3dc;
+  --dl-completed-text:    #1b4332;
+  --dl-cancelled:         #e76f51;   /* Cam — đã hủy */
+  --dl-cancelled-surface: #fde8e2;
+  --dl-cancelled-text:    #d4502e;
+  --dl-inprogress:        #4895ef;   /* Xanh dương — đang thực hiện */
+  --dl-inprogress-surface:#dbeafe;
+  --dl-inprogress-text:   #1e40af;
+
+  /* ===== TEXT ===== */
+  --dl-text:              #1a1a2e;
+  --dl-text-muted:        #6b7280;
+  --dl-text-faint:        #9ca3af;
+
+
+  /* ===== SPACING (4px grid) ===== */
+  --dl-space-1:  0.25rem;   /* 4px */
+  --dl-space-2:  0.5rem;    /* 8px */
+  --dl-space-3:  0.75rem;   /* 12px */
+  --dl-space-4:  1rem;      /* 16px */
+  --dl-space-5:  1.25rem;   /* 20px */
+  --dl-space-6:  1.5rem;    /* 24px */
+  --dl-space-8:  2rem;      /* 32px */
+  --dl-space-10: 2.5rem;    /* 40px */
+  --dl-space-12: 3rem;      /* 48px */
+  --dl-space-16: 4rem;      /* 64px */
+
+  /* ===== RADIUS ===== */
+  --dl-radius-sm:   0.375rem;  /* 6px */
+  --dl-radius-md:   0.5rem;    /* 8px */
+  --dl-radius-lg:   0.75rem;   /* 12px */
+  --dl-radius-xl:   1rem;      /* 16px */
+  --dl-radius-2xl:  1.5rem;    /* 24px */
+  --dl-radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  --dl-shadow-sm:   0 1px 3px rgba(45, 106, 79, 0.06);
+  --dl-shadow-md:   0 4px 12px rgba(45, 106, 79, 0.10);
+  --dl-shadow-lg:   0 12px 32px rgba(45, 106, 79, 0.14);
+  --dl-shadow-xl:   0 20px 48px rgba(45, 106, 79, 0.18);
+
+  /* ===== TRANSITIONS ===== */
+  --dl-transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --dl-transition:      250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --dl-transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ===== LAYOUT WIDTHS ===== */
+  --dl-content-max:      1200px;
+  --dl-sidebar-customer: 280px;
+  --dl-sidebar-provider: 240px;
+  --dl-sidebar-admin:    260px;
+}
+
+/* ===== DARK MODE ===== */
+.dark,
+[data-theme="dark"] {
+  --dl-warm-bg:           #0f1a14;      /* Đêm trong rừng thông */
+  --dl-warm-surface:      #162118;
+  --dl-brand:             #52b788;      /* Xanh sáng hơn trong dark */
+  --dl-text:              #e8f5e9;      /* Text trắng xanh */
+  --dl-warm-border:       rgba(82, 183, 136, 0.15);
+  --dl-text-muted:        #8b95a5;
+  --dl-text-faint:        #4b5563;
+  --dl-shadow-sm:         0 1px 3px rgba(0, 0, 0, 0.4);
+  --dl-shadow-md:         0 4px 12px rgba(0, 0, 0, 0.5);
+  --dl-shadow-lg:         0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== BRAND UTILITY CLASSES ===== */
+.brand-link:hover { color: var(--dl-brand) !important; }
+.border-brand { border-color: var(--dl-brand); }
+.text-brand { color: var(--dl-brand); }
+.bg-brand { background-color: var(--dl-brand); }
+.bg-brand-surface { background-color: var(--dl-brand-surface); }
+.ring-brand { --tw-ring-color: var(--dl-brand); }
+
+/* Focus ring brand */
+.focus\:border-brand:focus { border-color: var(--dl-brand); }
+.focus\:ring-brand\/30:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dl-brand) 30%, transparent); }
+
+/* Hover states */
+.hover\:bg-brand-surface:hover { background-color: var(--dl-brand-surface); }
+.hover\:text-brand:hover { color: var(--dl-brand); }
+.hover\:border-brand:hover { border-color: var(--dl-brand); }
+.group:hover .group-hover\:text-brand { color: var(--dl-brand); }
+

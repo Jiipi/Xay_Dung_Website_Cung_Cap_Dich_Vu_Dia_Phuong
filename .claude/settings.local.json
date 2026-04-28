@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(composer dev:*)",
+      "Bash(npm run:*)",
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"có\" npx prisma db push --force-reset)",
+      "Bash(npx prisma:*)"
+    ]
+  }
+}
