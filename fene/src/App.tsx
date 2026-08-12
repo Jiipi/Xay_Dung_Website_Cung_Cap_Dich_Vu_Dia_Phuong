@@ -5,14 +5,14 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
-import Home from "./pages/Home";
-import ServiceListing from "./pages/ServiceListing";
-import ServiceDetail from "./pages/ServiceDetail";
-import CustomerDashboard from "./pages/CustomerDashboard";
 import AITripPlanner from "./pages/AITripPlanner";
-import ProviderDashboard from "./pages/ProviderDashboard";
-import ManageServices from "./pages/ManageServices";
+import CustomerDashboard from "./pages/CustomerDashboard";
+import Home from "./pages/Home";
 import ManageBookings from "./pages/ManageBookings";
+import ManageServices from "./pages/ManageServices";
+import ProviderDashboard from "./pages/ProviderDashboard";
+import ServiceDetail from "./pages/ServiceDetail";
+import ServiceListing from "./pages/ServiceListing";
 
 export default function App() {
   return (

@@ -1,4 +1,3 @@
-import { useParams, Link } from "react-router-dom";
 import {
   Star,
   MapPin,
@@ -9,6 +8,7 @@ import {
   MessageSquare,
   Calendar,
 } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
 
 export default function ServiceDetail() {
   const { id } = useParams();

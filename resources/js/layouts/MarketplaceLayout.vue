@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import SiteHeader from '@/components/SiteHeader.vue';
-import SiteFooter from '@/components/SiteFooter.vue';
-import FlashToast from '@/components/FlashToast.vue';
-import { useSmoothScroll } from '@/composables/useSmoothScroll';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { onMounted } from 'vue';
+import FlashToast from '@/components/FlashToast.vue';
+import SiteFooter from '@/components/SiteFooter.vue';
+import SiteHeader from '@/components/SiteHeader.vue';
+import { useSmoothScroll } from '@/composables/useSmoothScroll';
 
 withDefaults(defineProps<{ role?: 'customer' | 'provider' | 'admin' }>(), { role: 'customer' });
 

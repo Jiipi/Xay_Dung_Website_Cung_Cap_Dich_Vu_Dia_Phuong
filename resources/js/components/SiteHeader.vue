@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import NotificationBell from '@/components/NotificationBell.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     CalendarCheck,
@@ -17,9 +15,10 @@ import {
     Sparkles,
     Star,
     User,
-    Wrench,
     X,
 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { useAnimations } from '@/composables/useAnimations';
 
 const { animateAutoHideHeader } = useAnimations();
@@ -37,7 +36,9 @@ const isLoggedIn = computed(() => !!page.props.auth?.user);
 const userName = computed(() => page.props.auth?.user?.name ?? '');
 const userEmail = computed(() => page.props.auth?.user?.email ?? '');
 const userRole = computed(() => (page.props.auth as any)?.role ?? '');
-const userInitial = computed(() => userName.value?.charAt(0)?.toUpperCase() ?? 'U');
+const userInitial = computed(
+    () => userName.value?.charAt(0)?.toUpperCase() ?? 'U',
+);
 const isProvider = computed(() => userRole.value === 'Nhà cung cấp');
 const isAdmin = computed(() => userRole.value === 'Admin');
 
@@ -74,10 +75,21 @@ function closeUserMenuSoon() {
     <header ref="headerRef" class="site-header">
         <div class="site-header__inner">
             <!-- Logo -->
-            <Link :href="isAdmin ? '/admin/dashboard' : isProvider ? '/provider/dashboard' : '/'" class="site-header__logo">
-                <div class="site-header__logo-icon">
-                    <Wrench class="size-5" />
-                </div>
+            <Link
+                :href="
+                    isAdmin
+                        ? '/admin/dashboard'
+                        : isProvider
+                          ? '/provider/dashboard'
+                          : '/'
+                "
+                class="site-header__logo"
+            >
+                <img
+                    src="/favicon.png"
+                    alt="Dalat Services"
+                    class="site-header__logo-image"
+                />
                 <div class="hidden sm:block">
                     <p class="site-header__logo-label">Local Service</p>
                     <h1 class="site-header__logo-title">Dalat Services</h1>
@@ -86,7 +98,10 @@ function closeUserMenuSoon() {
 
             <!-- Search Bar Desktop -->
             <div v-if="!isProvider" class="hidden max-w-xl flex-1 md:flex">
-                <form @submit.prevent="handleSearch" class="site-header__search">
+                <form
+                    @submit.prevent="handleSearch"
+                    class="site-header__search"
+                >
                     <Search class="site-header__search-icon" />
                     <input
                         v-model="searchQuery"
@@ -94,42 +109,74 @@ function closeUserMenuSoon() {
                         placeholder="Tìm dịch vụ: sửa điều hòa, tour săn mây..."
                         class="site-header__search-input"
                     />
-                    <button type="submit" class="site-header__search-btn">Tìm</button>
+                    <button type="submit" class="site-header__search-btn">
+                        Tìm
+                    </button>
                 </form>
             </div>
 
             <!-- Nav + Auth Desktop -->
             <div class="hidden items-center gap-6 md:flex">
                 <!-- Provider Nav -->
-                <nav v-if="isProvider" class="flex items-center gap-5 text-sm font-medium" style="color: var(--dl-text-muted);">
-                    <Link href="/provider/dashboard" class="site-header__nav-link">
+                <nav
+                    v-if="isProvider"
+                    class="flex items-center gap-5 text-sm font-medium"
+                    style="color: var(--dl-text-muted)"
+                >
+                    <Link
+                        href="/provider/dashboard"
+                        class="site-header__nav-link"
+                    >
                         <LayoutDashboard class="size-3.5" /> Tổng quan
                     </Link>
-                    <Link href="/provider/services" class="site-header__nav-link">
+                    <Link
+                        href="/provider/services"
+                        class="site-header__nav-link"
+                    >
                         <Package class="size-3.5" /> Dịch vụ
                     </Link>
-                    <Link href="/provider/bookings" class="site-header__nav-link">
+                    <Link
+                        href="/provider/bookings"
+                        class="site-header__nav-link"
+                    >
                         <ClipboardList class="size-3.5" /> Đơn hàng
                     </Link>
-                    <Link href="/provider/reviews" class="site-header__nav-link">
+                    <Link
+                        href="/provider/reviews"
+                        class="site-header__nav-link"
+                    >
                         <Star class="size-3.5" /> Đánh giá
                     </Link>
-                    <Link href="/provider/availability" class="site-header__nav-link">
+                    <Link
+                        href="/provider/availability"
+                        class="site-header__nav-link"
+                    >
                         <CalendarCheck class="size-3.5" /> Lịch rảnh
                     </Link>
-                    <Link href="/provider/profile" class="site-header__nav-link">
+                    <Link
+                        href="/provider/profile"
+                        class="site-header__nav-link"
+                    >
                         <User class="size-3.5" /> Hồ sơ
                     </Link>
                 </nav>
 
                 <!-- Public/Customer Nav -->
-                <nav v-else class="flex items-center gap-5 text-sm font-medium" style="color: var(--dl-text-muted);">
-                    <Link href="/services" class="site-header__nav-link">Khám phá</Link>
+                <nav
+                    v-else
+                    class="flex items-center gap-5 text-sm font-medium"
+                    style="color: var(--dl-text-muted)"
+                >
+                    <Link href="/services" class="site-header__nav-link"
+                        >Khám phá</Link
+                    >
                     <Link href="/ai-planner" class="site-header__nav-link">
                         <span class="site-header__ai-badge">AI</span>
                         Lên lịch trình
                     </Link>
-                    <Link href="/categories" class="site-header__nav-link">Danh mục</Link>
+                    <Link href="/categories" class="site-header__nav-link"
+                        >Danh mục</Link
+                    >
                 </nav>
 
                 <div class="flex items-center gap-2">
@@ -142,9 +189,18 @@ function closeUserMenuSoon() {
                                 @click="isUserMenuOpen = !isUserMenuOpen"
                                 @blur="closeUserMenuSoon"
                             >
-                                <span class="site-header__avatar">{{ userInitial }}</span>
-                                <span class="hidden max-w-[120px] truncate lg:inline" style="color: var(--dl-text);">{{ userName }}</span>
-                                <ChevronDown class="size-3.5" style="color: var(--dl-text-faint);" />
+                                <span class="site-header__avatar">{{
+                                    userInitial
+                                }}</span>
+                                <span
+                                    class="hidden max-w-[120px] truncate lg:inline"
+                                    style="color: var(--dl-text)"
+                                    >{{ userName }}</span
+                                >
+                                <ChevronDown
+                                    class="size-3.5"
+                                    style="color: var(--dl-text-faint)"
+                                />
                             </button>
 
                             <!-- Dropdown Menu -->
@@ -156,31 +212,88 @@ function closeUserMenuSoon() {
                                 leave-from-class="scale-100 opacity-100"
                                 leave-to-class="scale-95 opacity-0"
                             >
-                                <div v-show="isUserMenuOpen" class="site-header__dropdown">
+                                <div
+                                    v-show="isUserMenuOpen"
+                                    class="site-header__dropdown"
+                                >
                                     <!-- User info -->
                                     <div class="site-header__dropdown-header">
-                                        <p class="site-header__dropdown-name">{{ userName }}</p>
-                                        <p class="site-header__dropdown-email">{{ userEmail }}</p>
-                                        <span class="site-header__dropdown-role">{{ roleLabel }}</span>
+                                        <p class="site-header__dropdown-name">
+                                            {{ userName }}
+                                        </p>
+                                        <p class="site-header__dropdown-email">
+                                            {{ userEmail }}
+                                        </p>
+                                        <span
+                                            class="site-header__dropdown-role"
+                                            >{{ roleLabel }}</span
+                                        >
                                     </div>
                                     <!-- Links -->
                                     <div class="p-2">
-                                        <Link :href="dashboardUrl" class="site-header__dropdown-link">
-                                            <LayoutDashboard class="size-4" style="color: var(--dl-text-faint);" /> Dashboard
+                                        <Link
+                                            :href="dashboardUrl"
+                                            class="site-header__dropdown-link"
+                                        >
+                                            <LayoutDashboard
+                                                class="size-4"
+                                                style="
+                                                    color: var(--dl-text-faint);
+                                                "
+                                            />
+                                            {{
+                                                isAdmin
+                                                    ? 'Trang quản lý admin'
+                                                    : 'Dashboard'
+                                            }}
                                         </Link>
-                                        <Link v-if="userRole !== 'Nhà cung cấp'" href="/customer/bookings" class="site-header__dropdown-link">
-                                            <CalendarDays class="size-4" style="color: var(--dl-text-faint);" /> Booking của tôi
+                                        <Link
+                                            v-if="!isProvider && !isAdmin"
+                                            href="/customer/bookings"
+                                            class="site-header__dropdown-link"
+                                        >
+                                            <CalendarDays
+                                                class="size-4"
+                                                style="
+                                                    color: var(--dl-text-faint);
+                                                "
+                                            />
+                                            Booking của tôi
                                         </Link>
-                                        <Link v-if="userRole !== 'Nhà cung cấp'" href="/customer/favorites" class="site-header__dropdown-link">
-                                            <Heart class="size-4" style="color: var(--dl-text-faint);" /> Yêu thích
+                                        <Link
+                                            v-if="!isProvider && !isAdmin"
+                                            href="/customer/favorites"
+                                            class="site-header__dropdown-link"
+                                        >
+                                            <Heart
+                                                class="size-4"
+                                                style="
+                                                    color: var(--dl-text-faint);
+                                                "
+                                            />
+                                            Yêu thích
                                         </Link>
-                                        <Link href="/settings/profile" class="site-header__dropdown-link">
-                                            <Settings class="size-4" style="color: var(--dl-text-faint);" /> Cài đặt
+                                        <Link
+                                            href="/settings/profile"
+                                            class="site-header__dropdown-link"
+                                        >
+                                            <Settings
+                                                class="size-4"
+                                                style="
+                                                    color: var(--dl-text-faint);
+                                                "
+                                            />
+                                            Cài đặt
                                         </Link>
                                     </div>
                                     <!-- Logout -->
                                     <div class="site-header__dropdown-footer">
-                                        <Link href="/logout" method="post" as="button" class="site-header__dropdown-link site-header__dropdown-link--danger">
+                                        <Link
+                                            href="/logout"
+                                            method="post"
+                                            as="button"
+                                            class="site-header__dropdown-link site-header__dropdown-link--danger"
+                                        >
                                             <LogOut class="size-4" /> Đăng xuất
                                         </Link>
                                     </div>
@@ -190,14 +303,21 @@ function closeUserMenuSoon() {
                     </template>
 
                     <template v-else>
-                        <Link href="/login" class="site-header__login-btn">Đăng nhập</Link>
-                        <Link href="/register" class="site-header__register-btn">Đăng ký</Link>
+                        <Link href="/login" class="site-header__login-btn"
+                            >Đăng nhập</Link
+                        >
+                        <Link href="/register" class="site-header__register-btn"
+                            >Đăng ký</Link
+                        >
                     </template>
                 </div>
             </div>
 
             <!-- Mobile hamburger -->
-            <button class="site-header__hamburger" @click="isMenuOpen = !isMenuOpen">
+            <button
+                class="site-header__hamburger"
+                @click="isMenuOpen = !isMenuOpen"
+            >
                 <Menu v-if="!isMenuOpen" class="size-6" />
                 <X v-else class="size-6" />
             </button>
@@ -205,10 +325,20 @@ function closeUserMenuSoon() {
 
         <!-- Mobile Search -->
         <div v-if="!isProvider" class="site-header__mobile-search">
-            <form @submit.prevent="handleSearch" class="site-header__search site-header__search--mobile">
+            <form
+                @submit.prevent="handleSearch"
+                class="site-header__search site-header__search--mobile"
+            >
                 <Search class="site-header__search-icon" />
-                <input v-model="searchQuery" type="text" placeholder="Tìm dịch vụ..." class="site-header__search-input" />
-                <button type="submit" class="site-header__search-btn">Tìm</button>
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Tìm dịch vụ..."
+                    class="site-header__search-input"
+                />
+                <button type="submit" class="site-header__search-btn">
+                    Tìm
+                </button>
             </form>
         </div>
 
@@ -216,50 +346,119 @@ function closeUserMenuSoon() {
         <div v-show="isMenuOpen" class="site-header__mobile-menu">
             <!-- Provider Mobile Nav -->
             <nav v-if="isProvider" class="site-header__mobile-nav">
-                <Link href="/provider/dashboard" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/dashboard"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <LayoutDashboard class="size-5" /> Tổng quan
                 </Link>
-                <Link href="/provider/services" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/services"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <Package class="size-5" /> Dịch vụ của tôi
                 </Link>
-                <Link href="/provider/bookings" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/bookings"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <ClipboardList class="size-5" /> Đơn hàng
                 </Link>
-                <Link href="/provider/reviews" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/reviews"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <Star class="size-5" /> Đánh giá
                 </Link>
-                <Link href="/provider/availability" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/availability"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <CalendarCheck class="size-5" /> Lịch rảnh
                 </Link>
-                <Link href="/provider/profile" class="site-header__mobile-link" @click="isMenuOpen = false">
+                <Link
+                    href="/provider/profile"
+                    class="site-header__mobile-link"
+                    @click="isMenuOpen = false"
+                >
                     <User class="size-5" /> Hồ sơ nhà cung cấp
                 </Link>
             </nav>
 
             <!-- Public/Customer Mobile Nav -->
             <nav v-else class="site-header__mobile-nav">
-                <Link href="/services" @click="isMenuOpen = false">Khám phá</Link>
-                <Link href="/ai-planner" class="flex items-center gap-2" @click="isMenuOpen = false">
-                    <Sparkles class="size-4" style="color: var(--dl-accent);" /> AI Lên lịch trình
+                <Link href="/services" @click="isMenuOpen = false"
+                    >Khám phá</Link
+                >
+                <Link
+                    href="/ai-planner"
+                    class="flex items-center gap-2"
+                    @click="isMenuOpen = false"
+                >
+                    <Sparkles class="size-4" style="color: var(--dl-accent)" />
+                    AI Lên lịch trình
                 </Link>
-                <Link href="/categories" @click="isMenuOpen = false">Danh mục</Link>
+                <Link href="/categories" @click="isMenuOpen = false"
+                    >Danh mục</Link
+                >
             </nav>
 
             <div class="mt-6 flex flex-col gap-2">
                 <template v-if="isLoggedIn">
                     <div class="site-header__mobile-user">
-                        <span class="site-header__avatar">{{ userInitial }}</span>
+                        <span class="site-header__avatar">{{
+                            userInitial
+                        }}</span>
                         <div>
-                            <p class="text-sm font-semibold" style="color: var(--dl-text);">{{ userName }}</p>
-                            <p class="text-xs" style="color: var(--dl-text-muted);">{{ roleLabel }}</p>
+                            <p
+                                class="text-sm font-semibold"
+                                style="color: var(--dl-text)"
+                            >
+                                {{ userName }}
+                            </p>
+                            <p
+                                class="text-xs"
+                                style="color: var(--dl-text-muted)"
+                            >
+                                {{ roleLabel }}
+                            </p>
                         </div>
                     </div>
-                    <Link :href="dashboardUrl" class="site-header__mobile-cta" @click="isMenuOpen = false">Dashboard</Link>
-                    <Link href="/logout" method="post" as="button" class="site-header__mobile-logout" @click="isMenuOpen = false">Đăng xuất</Link>
+                    <Link
+                        :href="dashboardUrl"
+                        class="site-header__mobile-cta"
+                        @click="isMenuOpen = false"
+                        >{{
+                            isAdmin ? 'Trang quản lý admin' : 'Dashboard'
+                        }}</Link
+                    >
+                    <Link
+                        href="/logout"
+                        method="post"
+                        as="button"
+                        class="site-header__mobile-logout"
+                        @click="isMenuOpen = false"
+                        >Đăng xuất</Link
+                    >
                 </template>
                 <template v-else>
-                    <Link href="/login" class="site-header__login-btn site-header__login-btn--full" @click="isMenuOpen = false">Đăng nhập</Link>
-                    <Link href="/register" class="site-header__register-btn site-header__register-btn--full" @click="isMenuOpen = false">Đăng ký</Link>
+                    <Link
+                        href="/login"
+                        class="site-header__login-btn site-header__login-btn--full"
+                        @click="isMenuOpen = false"
+                        >Đăng nhập</Link
+                    >
+                    <Link
+                        href="/register"
+                        class="site-header__register-btn site-header__register-btn--full"
+                        @click="isMenuOpen = false"
+                        >Đăng ký</Link
+                    >
                 </template>
             </div>
         </div>
@@ -272,7 +471,7 @@ function closeUserMenuSoon() {
     top: 0;
     z-index: 50;
     border-bottom: 1px solid var(--dl-warm-border);
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
 }
 
@@ -285,7 +484,11 @@ function closeUserMenuSoon() {
     gap: var(--dl-space-4);
     padding: var(--dl-space-3) var(--dl-space-4);
 }
-@media (min-width: 640px) { .site-header__inner { padding-inline: var(--dl-space-6); } }
+@media (min-width: 640px) {
+    .site-header__inner {
+        padding-inline: var(--dl-space-6);
+    }
+}
 
 /* Logo */
 .site-header__logo {
@@ -294,14 +497,10 @@ function closeUserMenuSoon() {
     gap: var(--dl-space-2);
     flex-shrink: 0;
 }
-.site-header__logo-icon {
-    display: flex;
-    width: 40px; height: 40px;
-    align-items: center; justify-content: center;
-    border-radius: var(--dl-radius-xl);
-    background: linear-gradient(135deg, var(--dl-brand), var(--dl-brand-light));
-    color: white;
-    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.25);
+.site-header__logo-image {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
 }
 .site-header__logo-label {
     font-size: 10px;
@@ -334,7 +533,8 @@ function closeUserMenuSoon() {
     box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.08);
 }
 .site-header__search-icon {
-    width: 16px; height: 16px;
+    width: 16px;
+    height: 16px;
     margin-right: var(--dl-space-2);
     color: var(--dl-text-faint);
     flex-shrink: 0;
@@ -347,7 +547,9 @@ function closeUserMenuSoon() {
     outline: none;
     min-width: 0;
 }
-.site-header__search-input::placeholder { color: var(--dl-text-faint); }
+.site-header__search-input::placeholder {
+    color: var(--dl-text-faint);
+}
 .site-header__search-btn {
     border-radius: var(--dl-radius-full);
     background: var(--dl-brand);
@@ -357,8 +559,12 @@ function closeUserMenuSoon() {
     color: white;
     transition: var(--dl-transition-fast);
 }
-.site-header__search-btn:hover { background: var(--dl-brand-hover); }
-.site-header__search-btn:active { transform: scale(0.95); }
+.site-header__search-btn:hover {
+    background: var(--dl-brand-hover);
+}
+.site-header__search-btn:active {
+    transform: scale(0.95);
+}
 
 /* Nav Links */
 .site-header__nav-link {
@@ -367,7 +573,9 @@ function closeUserMenuSoon() {
     gap: 6px;
     transition: var(--dl-transition-fast);
 }
-.site-header__nav-link:hover { color: var(--dl-text); }
+.site-header__nav-link:hover {
+    color: var(--dl-text);
+}
 
 .site-header__ai-badge {
     border-radius: var(--dl-radius-md);
@@ -397,8 +605,10 @@ function closeUserMenuSoon() {
 
 .site-header__avatar {
     display: flex;
-    width: 28px; height: 28px;
-    align-items: center; justify-content: center;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--dl-brand), var(--dl-brand-light));
     font-size: 11px;
@@ -409,7 +619,8 @@ function closeUserMenuSoon() {
 /* Dropdown */
 .site-header__dropdown {
     position: absolute;
-    right: 0; top: 100%;
+    right: 0;
+    top: 100%;
     margin-top: 8px;
     width: 16rem;
     border-radius: var(--dl-radius-2xl);
@@ -480,8 +691,13 @@ function closeUserMenuSoon() {
     color: var(--dl-text);
     transition: var(--dl-transition-fast);
 }
-.site-header__login-btn:hover { background: var(--dl-warm-bg); }
-.site-header__login-btn--full { text-align: center; padding: 12px; }
+.site-header__login-btn:hover {
+    background: var(--dl-warm-bg);
+}
+.site-header__login-btn--full {
+    text-align: center;
+    padding: 12px;
+}
 
 .site-header__register-btn {
     border-radius: var(--dl-radius-full);
@@ -492,8 +708,13 @@ function closeUserMenuSoon() {
     color: white;
     transition: var(--dl-transition-fast);
 }
-.site-header__register-btn:hover { background: var(--dl-brand-hover); }
-.site-header__register-btn--full { text-align: center; padding: 12px; }
+.site-header__register-btn:hover {
+    background: var(--dl-brand-hover);
+}
+.site-header__register-btn--full {
+    text-align: center;
+    padding: 12px;
+}
 
 /* Mobile */
 .site-header__hamburger {
@@ -501,14 +722,22 @@ function closeUserMenuSoon() {
     color: var(--dl-text-muted);
     display: block;
 }
-@media (min-width: 768px) { .site-header__hamburger { display: none; } }
+@media (min-width: 768px) {
+    .site-header__hamburger {
+        display: none;
+    }
+}
 
 .site-header__mobile-search {
     border-top: 1px solid var(--dl-warm-border);
     padding: var(--dl-space-2) var(--dl-space-4);
     display: block;
 }
-@media (min-width: 768px) { .site-header__mobile-search { display: none; } }
+@media (min-width: 768px) {
+    .site-header__mobile-search {
+        display: none;
+    }
+}
 .site-header__search--mobile {
     padding: 4px 4px 4px 12px;
 }
@@ -520,7 +749,11 @@ function closeUserMenuSoon() {
     box-shadow: var(--dl-shadow-lg);
     display: block;
 }
-@media (min-width: 768px) { .site-header__mobile-menu { display: none; } }
+@media (min-width: 768px) {
+    .site-header__mobile-menu {
+        display: none;
+    }
+}
 
 .site-header__mobile-nav {
     display: flex;

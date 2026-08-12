@@ -31,6 +31,7 @@ class ServiceManagementService
             'gia_tu' => $data['gia_tu'] ?? null,
             'gia_den' => $data['gia_den'] ?? null,
             'don_vi_gia' => $data['don_vi_gia'] ?? null,
+            'thoi_luong_phut' => $data['thoi_luong_phut'] ?? 120,
             'dia_chi_hien_thi' => $data['dia_chi_hien_thi'] ?? null,
             'danh_sach_anh' => $data['danh_sach_anh'] ?? null,
             'the_tu_khoa' => !empty($data['the_tu_khoa']) ? $data['the_tu_khoa'] : null,
@@ -62,6 +63,7 @@ class ServiceManagementService
             'gia_tu' => $data['gia_tu'] ?? null,
             'gia_den' => $data['gia_den'] ?? null,
             'don_vi_gia' => $data['don_vi_gia'] ?? null,
+            'thoi_luong_phut' => $data['thoi_luong_phut'] ?? 120,
             'dia_chi_hien_thi' => $data['dia_chi_hien_thi'] ?? null,
             'trang_thai_hoat_dong' => $data['trang_thai_hoat_dong'] ?? $service->trang_thai_hoat_dong,
         ];

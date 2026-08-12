@@ -29,6 +29,7 @@ class HoSoNhaCungCap extends Model
         'ten_chu_tk',
         'ty_le_hoa_hong',
         'diem_danh_gia',
+        'so_du',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class HoSoNhaCungCap extends Model
         return [
             'ty_le_hoa_hong' => 'decimal:2',
             'diem_danh_gia' => 'decimal:2',
+            'so_du' => 'decimal:2',
         ];
     }
 

@@ -29,6 +29,8 @@ class DonDatLich extends Model
         'phi_dich_vu',
         'giam_gia',
         'tong_tien',
+        'tien_coc',
+        'phi_nen_tang',
         'trang_thai_don',
         'phuong_thuc_thanh_toan',
         'trang_thai_thanh_toan',
@@ -46,6 +48,8 @@ class DonDatLich extends Model
             'phi_dich_vu' => 'decimal:2',
             'giam_gia' => 'decimal:2',
             'tong_tien' => 'decimal:2',
+            'tien_coc' => 'decimal:2',
+            'phi_nen_tang' => 'decimal:2',
         ];
     }
 

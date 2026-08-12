@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+defineOptions({ layout: AdminLayout });
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Search, Shield, ShieldOff, UserCheck, UserX, Users, Sparkles, X } from 'lucide-vue-next';
+import { Search, Shield, ShieldOff, UserCheck, UserX, Users, X } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { useAnimations } from '@/composables/useAnimations';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface UserItem {
@@ -42,7 +44,7 @@ const statusFilter = ref(props.filters.status ?? 'all');
 const pendingUser = ref<UserItem | null>(null);
 
 const modalTitle = computed(() =>
-    pendingUser.value?.trang_thai === 'hoat_dong' ? 'Khoa tai khoan' : 'Mo khoa tai khoan',
+    pendingUser.value?.trang_thai === 'hoat_dong' ? 'Khóa tài khoản' : 'Mở khóa tài khoản',
 );
 
 function applyFilters() {
@@ -73,7 +75,7 @@ function confirmToggleStatus() {
 }
 
 function formatLastLogin(value?: string | null) {
-    if (!value) return 'Chua dang nhap';
+    if (!value) return 'Chưa đăng nhập';
 
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) {
@@ -90,144 +92,127 @@ function formatLastLogin(value?: string | null) {
 }
 
 const roleColors: Record<string, string> = {
-    Admin: 'text-blue-600 bg-blue-50',
-    'Nha cung cap': 'text-emerald-600 bg-emerald-50',
-    'Khach hang': 'text-amber-600 bg-amber-50',
+    Admin: 'text-blue-700 bg-blue-50 ring-1 ring-blue-200',
+    'Nhà cung cấp': 'text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200',
+    'Khách hàng': 'text-amber-700 bg-amber-50 ring-1 ring-amber-200',
 };
 
 const avatarGradients: Record<string, string> = {
     Admin: 'from-blue-500 to-indigo-500',
-    'Nha cung cap': 'from-emerald-500 to-teal-500',
-    'Khach hang': 'from-amber-500 to-orange-500',
+    'Nhà cung cấp': 'from-emerald-500 to-teal-500',
+    'Khách hàng': 'from-amber-500 to-orange-500',
 };
+
+// Animations
+const { animateFadeUp } = useAnimations();
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
-    <Head title="Quan ly nguoi dung" />
+    <Head title="Quản lý người dùng" />
 
-    <AdminLayout activePage="users">
-        <div class="mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-            <div class="admin-page-header">
-                <div class="admin-page-header__accent" />
-                <div>
-                    <div class="mb-1 flex items-center gap-2">
-                        <Sparkles class="size-3.5 text-blue-500" />
-                        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500/70">Quan ly</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-stone-800">Nguoi dung</h1>
-                    <p class="mt-1 text-sm text-stone-500">Them ngu canh truoc khi khoa tai khoan va theo doi muc do hoat dong gan day.</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div class="admin-stat-card group">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-6">
+            <!-- Stats Cards -->
+            <div class="animate-fade-up grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="flex items-center gap-3">
                         <div class="rounded-xl bg-blue-50 p-2.5 text-blue-500 transition group-hover:scale-110">
                             <Users class="size-5" />
                         </div>
                         <div>
                             <p class="text-xl font-bold text-stone-800">{{ stats.total }}</p>
-                            <p class="text-xs text-stone-500">Tong cong</p>
+                            <p class="text-xs text-stone-500">Tổng cộng</p>
                         </div>
                     </div>
                 </div>
-                <div class="admin-stat-card group">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="flex items-center gap-3">
                         <div class="rounded-xl bg-emerald-50 p-2.5 text-emerald-500 transition group-hover:scale-110">
                             <UserCheck class="size-5" />
                         </div>
                         <div>
                             <p class="text-xl font-bold text-stone-800">{{ stats.active }}</p>
-                            <p class="text-xs text-stone-500">Dang hoat dong</p>
+                            <p class="text-xs text-stone-500">Đang hoạt động</p>
                         </div>
                     </div>
                 </div>
-                <div class="admin-stat-card group">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="flex items-center gap-3">
                         <div class="rounded-xl bg-red-50 p-2.5 text-red-500 transition group-hover:scale-110">
                             <UserX class="size-5" />
                         </div>
                         <div>
                             <p class="text-xl font-bold text-stone-800">{{ stats.inactive }}</p>
-                            <p class="text-xs text-stone-500">Dang bi khoa</p>
+                            <p class="text-xs text-stone-500">Đang bị khóa</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-stone-200 bg-stone-50/80 p-4">
-                <div class="grid gap-3 md:grid-cols-3">
+            <!-- Main Card -->
+            <div class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-4 border-b border-stone-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Tim kiem</p>
-                        <p class="mt-1 text-sm text-stone-600">Co the tim theo ten, email hoac so dien thoai de xu ly nhanh.</p>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Quản lý</p>
+                        <h1 class="mt-1 text-2xl font-black tracking-tight text-stone-950">Người dùng</h1>
+                        <p class="mt-1 text-sm text-stone-500">{{ users.total }} người dùng trong hệ thống</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Kiem tra nhanh</p>
-                        <p class="mt-1 text-sm text-stone-600">Moc dang nhap gan nhat giup nhin ra tai khoan bo trong hay co dau hieu bat thuong.</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Hanh dong</p>
-                        <p class="mt-1 text-sm text-stone-600">Khoa va mo khoa duoc xac nhan lai de tranh thao tac nham tren role nhay cam.</p>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
+                            <input
+                                v-model="search"
+                                type="text"
+                                placeholder="Tìm theo tên, email..."
+                                class="w-52 rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-9 pr-3 text-sm outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+                                @keyup.enter="applyFilters"
+                            />
+                        </div>
+                        <select v-model="roleFilter" class="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100" @change="applyFilters">
+                            <option value="all">Tất cả vai trò</option>
+                            <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
+                        </select>
+                        <select v-model="statusFilter" class="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100" @change="applyFilters">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="hoat_dong">Hoạt động</option>
+                            <option value="bi_khoa">Bị khóa</option>
+                        </select>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="relative min-w-[240px] flex-1">
-                    <Search class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Tim theo ten, email, so dien thoai..."
-                        class="admin-input pl-10"
-                        @keyup.enter="applyFilters"
-                    />
-                </div>
-                <select v-model="roleFilter" class="admin-select" @change="applyFilters">
-                    <option value="all">Tat ca vai tro</option>
-                    <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
-                </select>
-                <select v-model="statusFilter" class="admin-select" @change="applyFilters">
-                    <option value="all">Tat ca trang thai</option>
-                    <option value="hoat_dong">Hoat dong</option>
-                    <option value="bi_khoa">Bi khoa</option>
-                </select>
-            </div>
-
-            <div class="admin-card">
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[920px] text-left text-sm">
                         <thead>
-                            <tr class="border-b border-stone-200 text-xs font-medium uppercase tracking-wider text-stone-500">
-                                <th class="px-6 py-3">Nguoi dung</th>
-                                <th class="px-6 py-3">Lien he</th>
-                                <th class="px-6 py-3">Vai tro</th>
-                                <th class="px-6 py-3">Trang thai</th>
-                                <th class="px-6 py-3">Lan hoat dong gan day</th>
-                                <th class="px-6 py-3">Ngay tao</th>
-                                <th class="px-6 py-3 text-right">Hanh dong</th>
+                            <tr class="border-b border-stone-100 text-xs font-medium uppercase tracking-[0.16em] text-stone-400">
+                                <th class="px-6 py-3.5">Người dùng</th>
+                                <th class="px-6 py-3.5">Liên hệ</th>
+                                <th class="px-6 py-3.5">Vai trò</th>
+                                <th class="px-6 py-3.5">Trạng thái</th>
+                                <th class="px-6 py-3.5">Lần hoạt động gần đây</th>
+                                <th class="px-6 py-3.5">Ngày tạo</th>
+                                <th class="px-6 py-3.5 text-right">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="user in users.data" :key="user.id" class="admin-table-row">
-                                <td class="whitespace-nowrap px-6 py-3">
+                            <tr v-for="user in users.data" :key="user.id" class="border-b border-stone-50 transition-colors hover:bg-stone-50/80">
+                                <td class="whitespace-nowrap px-6 py-3.5">
                                     <div class="flex items-center gap-3">
                                         <div :class="['flex size-9 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white', avatarGradients[user.vai_tro] ?? 'from-stone-400 to-stone-500']">
                                             {{ user.ho_ten?.charAt(0)?.toUpperCase() ?? '?' }}
                                         </div>
                                         <div>
-                                            <p class="font-medium text-stone-700">{{ user.ho_ten }}</p>
+                                            <p class="font-medium text-stone-800">{{ user.ho_ten }}</p>
                                             <p class="text-xs text-stone-400">ID #{{ user.id }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3.5">
                                     <div class="space-y-1 text-sm">
                                         <p class="text-stone-600">{{ user.email }}</p>
-                                        <p class="text-xs text-stone-400">{{ user.so_dien_thoai || 'Chua cap nhat so dien thoai' }}</p>
+                                        <p class="text-xs text-stone-400">{{ user.so_dien_thoai || 'Chưa cập nhật SĐT' }}</p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3.5">
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
                                         :class="roleColors[user.vai_tro] ?? 'bg-stone-100 text-stone-500'"
@@ -235,215 +220,131 @@ const avatarGradients: Record<string, string> = {
                                         {{ user.vai_tro }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3.5">
                                     <span v-if="user.trang_thai === 'hoat_dong'" class="flex items-center gap-1.5 text-xs text-emerald-600">
-                                        <span class="size-1.5 rounded-full bg-emerald-500" /> Hoat dong
+                                        <span class="size-1.5 rounded-full bg-emerald-500" /> Hoạt động
                                     </span>
                                     <span v-else class="flex items-center gap-1.5 text-xs text-red-500">
-                                        <span class="size-1.5 rounded-full bg-red-500" /> Bi khoa
+                                        <span class="size-1.5 rounded-full bg-red-500" /> Bị khóa
                                     </span>
                                 </td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3.5">
                                     <div class="space-y-1">
                                         <p class="text-sm text-stone-600">{{ formatLastLogin(user.lan_dang_nhap_cuoi) }}</p>
-                                        <p class="text-xs text-stone-400">
-                                            {{ user.lan_dang_nhap_cuoi ? 'Da co hoat dong gan day' : 'Can theo doi them' }}
-                                        </p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-3 text-stone-500">{{ user.ngay_tao }}</td>
-                                <td class="px-6 py-3 text-right">
+                                <td class="px-6 py-3.5 text-stone-500">{{ user.ngay_tao }}</td>
+                                <td class="px-6 py-3.5 text-right">
                                     <button
                                         v-if="user.vai_tro !== 'Admin'"
-                                        class="admin-action-btn"
+                                        class="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-2 text-xs font-medium transition-colors"
                                         :class="user.trang_thai === 'hoat_dong'
-                                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'"
+                                            ? 'text-red-600 hover:bg-red-50'
+                                            : 'text-emerald-600 hover:bg-emerald-50'"
                                         @click="openStatusModal(user)"
                                     >
-                                        <ShieldOff v-if="user.trang_thai === 'hoat_dong'" class="mr-1 inline size-3.5" />
-                                        <Shield v-else class="mr-1 inline size-3.5" />
-                                        {{ user.trang_thai === 'hoat_dong' ? 'Khoa' : 'Mo khoa' }}
+                                        <ShieldOff v-if="user.trang_thai === 'hoat_dong'" class="size-3.5" />
+                                        <Shield v-else class="size-3.5" />
+                                        {{ user.trang_thai === 'hoat_dong' ? 'Khóa' : 'Mở khóa' }}
                                     </button>
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td colspan="7" class="px-6 py-12 text-center text-sm text-stone-400">Khong tim thay nguoi dung phu hop</td>
+                                <td colspan="7" class="px-6 py-16 text-center text-sm text-stone-400">Không tìm thấy người dùng phù hợp</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div v-if="users.last_page > 1" class="flex items-center justify-between border-t border-stone-200 px-6 py-3">
-                    <p class="text-xs text-stone-500">Trang {{ users.current_page }} / {{ users.last_page }} ({{ users.total }} nguoi dung)</p>
+                <div v-if="users.last_page > 1" class="flex items-center justify-between border-t border-stone-100 px-6 py-4">
+                    <p class="text-xs text-stone-500">Trang {{ users.current_page }} / {{ users.last_page }} ({{ users.total }} người dùng)</p>
                     <div class="flex gap-1">
-                        <Link
-                            v-for="link in users.links"
-                            :key="link.label"
-                            :href="link.url ?? ''"
-                            class="admin-pagination-btn"
-                            :class="link.active
-                                ? 'bg-blue-500 text-white'
-                                : link.url ? 'bg-stone-100 text-stone-600 hover:bg-stone-200' : 'cursor-not-allowed bg-stone-50 text-stone-300'"
-                            v-html="link.label"
-                            :preserve-scroll="true"
-                        />
+                        <template v-for="link in users.links" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                class="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+                                :class="link.active ? 'bg-sky-600 text-white' : 'text-stone-600 hover:bg-stone-100'"
+                                v-html="link.label"
+                                preserve-state
+                            />
+                            <span
+                                v-else
+                                class="rounded-lg px-3 py-1.5 text-xs text-stone-300"
+                                v-html="link.label"
+                            />
+                        </template>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div v-if="pendingUser" class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 px-4">
-            <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-400">Xac nhan thao tac</p>
-                        <h2 class="mt-2 text-xl font-semibold text-stone-900">{{ modalTitle }}</h2>
-                        <p class="mt-2 text-sm leading-6 text-stone-500">
-                            Ban dang cap nhat trang thai cho <span class="font-medium text-stone-700">{{ pendingUser.ho_ten }}</span>.
-                            Hay kiem tra nhanh vai tro, lan dang nhap cuoi va thong tin lien he truoc khi tiep tuc.
-                        </p>
+        <!-- Toggle Status Modal -->
+        <Teleport to="body">
+            <div v-if="pendingUser" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                <div class="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-xl">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-400">Xác nhận thao tác</p>
+                            <h2 class="mt-2 text-xl font-bold text-stone-900">{{ modalTitle }}</h2>
+                            <p class="mt-2 text-sm leading-6 text-stone-500">
+                                Bạn đang cập nhật trạng thái cho <span class="font-medium text-stone-700">{{ pendingUser.ho_ten }}</span>.
+                            </p>
+                        </div>
+                        <button class="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600" @click="closeStatusModal">
+                            <X class="size-4" />
+                        </button>
                     </div>
-                    <button class="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600" @click="closeStatusModal">
-                        <X class="size-4" />
-                    </button>
-                </div>
 
-                <div class="mt-5 rounded-2xl border border-stone-200 bg-stone-50 p-4">
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Vai tro</p>
-                            <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.vai_tro }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Trang thai hien tai</p>
-                            <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.trang_thai === 'hoat_dong' ? 'Hoat dong' : 'Bi khoa' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Lien he</p>
-                            <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.email }}</p>
-                            <p class="text-xs text-stone-400">{{ pendingUser.so_dien_thoai || 'Chua cap nhat' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Lan dang nhap cuoi</p>
-                            <p class="mt-1 text-sm font-medium text-stone-700">{{ formatLastLogin(pendingUser.lan_dang_nhap_cuoi) }}</p>
+                    <div class="mt-5 rounded-2xl border border-stone-200 bg-stone-50 p-4">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Vai trò</p>
+                                <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.vai_tro }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Trạng thái hiện tại</p>
+                                <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bị khóa' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Liên hệ</p>
+                                <p class="mt-1 text-sm font-medium text-stone-700">{{ pendingUser.email }}</p>
+                                <p class="text-xs text-stone-400">{{ pendingUser.so_dien_thoai || 'Chưa cập nhật' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.14em] text-stone-400">Lần đăng nhập cuối</p>
+                                <p class="mt-1 text-sm font-medium text-stone-700">{{ formatLastLogin(pendingUser.lan_dang_nhap_cuoi) }}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                    <button class="rounded-xl border border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50" @click="closeStatusModal">
-                        Quay lai
-                    </button>
-                    <button
-                        class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition"
-                        :class="pendingUser.trang_thai === 'hoat_dong' ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'"
-                        @click="confirmToggleStatus"
-                    >
-                        {{ pendingUser.trang_thai === 'hoat_dong' ? 'Xac nhan khoa tai khoan' : 'Xac nhan mo khoa' }}
-                    </button>
+                    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <button class="rounded-xl border border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50" @click="closeStatusModal">
+                            Quay lại
+                        </button>
+                        <button
+                            class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition"
+                            :class="pendingUser.trang_thai === 'hoat_dong' ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'"
+                            @click="confirmToggleStatus"
+                        >
+                            {{ pendingUser.trang_thai === 'hoat_dong' ? 'Xác nhận khóa tài khoản' : 'Xác nhận mở khóa' }}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </AdminLayout>
-</template>
+        </Teleport>
+    </template>
 
 <style scoped>
-.admin-page-header {
-    position: relative;
-    padding: 0.5rem 0 0.5rem 1rem;
+.animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
 }
-
-.admin-page-header__accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 3px;
-    background: linear-gradient(to bottom, #3b82f6, #6366f1);
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
-}
-
-.admin-stat-card {
-    border-radius: 1.25rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    padding: 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.admin-stat-card:hover {
-    border-color: #d6d3d1;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.admin-card {
-    overflow: hidden;
-    border-radius: 1.5rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.admin-input {
-    width: 100%;
-    border-radius: 0.75rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    color: #1c1917;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.admin-input::placeholder {
-    color: #a8a29e;
-}
-
-.admin-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.admin-select {
-    border-radius: 0.75rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    color: #57534e;
-    outline: none;
-}
-
-.admin-select:focus {
-    border-color: #3b82f6;
-}
-
-.admin-table-row {
-    border-bottom: 1px solid #f5f5f4;
-    transition: background 0.2s ease;
-}
-
-.admin-table-row:hover {
-    background: #fafaf9;
-}
-
-.admin-action-btn {
-    border-radius: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.admin-pagination-btn {
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
 </style>

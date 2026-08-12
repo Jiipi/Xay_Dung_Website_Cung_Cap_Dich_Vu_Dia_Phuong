@@ -24,6 +24,7 @@ class DichVu extends Model
         'gia_den',
         'don_vi_gia',
         'dia_chi_hien_thi',
+        'thoi_luong_phut',
         'tinh_thanh_id',
         'quan_huyen_id',
         'toa_do_lat',

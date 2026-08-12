@@ -1,17 +1,20 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
+/.next
+/.vercel
+/tsconfig.tsbuildinfo
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
-/resources/js/actions
-/resources/js/routes
-/resources/js/wayfinder
 /vendor
+/bootstrap/cache/*.php
+/database/database.sqlite
 .DS_Store
 .env
+.env.docker
 .env.backup
 .env.production
 .phpactor.json
@@ -26,5 +29,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.claude/settings.local.json
 
 /app/generated/prisma

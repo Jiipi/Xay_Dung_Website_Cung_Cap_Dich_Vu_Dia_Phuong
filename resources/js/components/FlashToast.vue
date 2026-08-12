@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { watch, onMounted } from 'vue';
 import { Toaster, toast } from 'vue-sonner';
 
 const page = usePage();

@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Sparkles,
   MapPin,
@@ -8,6 +7,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
+import React, { useState } from "react";
 
 export default function AITripPlanner() {
   const [loading, setLoading] = useState(false);

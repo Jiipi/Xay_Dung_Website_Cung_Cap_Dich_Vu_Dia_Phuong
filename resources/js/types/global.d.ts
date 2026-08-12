@@ -1,4 +1,13 @@
+import type Echo from 'laravel-echo';
+import type Pusher from 'pusher-js';
 import type { Auth } from '@/types/auth';
+
+declare global {
+    interface Window {
+        Pusher?: typeof Pusher;
+        Echo?: Echo;
+    }
+}
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {

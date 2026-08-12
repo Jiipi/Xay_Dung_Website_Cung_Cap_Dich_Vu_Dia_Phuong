@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -10,6 +9,7 @@ import {
   LogOut,
   Star,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function ProviderDashboard() {
   const stats = [

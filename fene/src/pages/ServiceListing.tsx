@@ -1,6 +1,6 @@
+import { Filter, Star, MapPin, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Filter, Star, MapPin, Search } from "lucide-react";
 
 export default function ServiceListing() {
   const [searchParams] = useSearchParams();

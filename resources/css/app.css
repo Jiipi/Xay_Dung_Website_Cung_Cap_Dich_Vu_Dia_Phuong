@@ -10,10 +10,10 @@
 
 @theme inline {
     --font-sans:
-        'Satoshi', ui-sans-serif, system-ui, sans-serif,
+        var(--font-plus-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
-    --font-serif: 'Instrument Serif', serif;
+    --font-serif: var(--font-playfair), 'Playfair Display', serif;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -161,10 +161,10 @@
     }
     body {
         @apply bg-background text-foreground;
-        font-family: 'Satoshi', sans-serif;
+        font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
     }
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Instrument Serif', serif;
+        font-family: var(--font-playfair), 'Playfair Display', serif;
     }
 }
 

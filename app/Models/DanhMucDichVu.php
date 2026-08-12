@@ -15,6 +15,7 @@ class DanhMucDichVu extends Model
         'ten_danh_muc',
         'slug',
         'mo_ta',
+        'icon',
         'anh_dai_dien',
         'thu_tu_hien_thi',
         'trang_thai',

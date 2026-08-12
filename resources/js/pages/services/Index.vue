@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import gsap from 'gsap'; // Added gsap import for direct usage
 import {
     ArrowUpDown,
     BadgeCheck,
-    CarFront,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
@@ -13,25 +12,22 @@ import {
     Heart,
     Home,
     MapPin,
-    Monitor,
     Paintbrush,
     Search,
     SlidersHorizontal,
-    Snowflake,
     Star,
-    TrendingUp,
     Wrench,
     X,
     Map as MapIcon,
-    List
+    List,
 } from 'lucide-vue-next';
-import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import LeafletMap from '@/components/ui/LeafletMap.vue';
 import { useAnimations } from '@/composables/useAnimations';
-import gsap from 'gsap'; // Added gsap import for direct usage
+import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
 
 // ─── Animation System ────────────────────────────────────────────
-const { animateStagger, createTimeline, trackTween } = useAnimations();
+const { animateStagger, trackTween } = useAnimations();
 
 const serviceGridRef = ref<HTMLElement | null>(null);
 const bannerRef = ref<HTMLElement | null>(null);
@@ -40,14 +36,14 @@ const bannerRef = ref<HTMLElement | null>(null);
 onMounted(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    
+
     // Slight delay to ensure DOM is ready
     setTimeout(() => {
         if (!bannerRef.value) return;
         const tw = gsap.fromTo(
             bannerRef.value,
             { opacity: 0, y: 30 },
-            { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
+            { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' },
         );
         trackTween(tw);
     }, 100);
@@ -133,26 +129,39 @@ const sortOptions = [
 /* ──────────────────────────── Computed ──────────────────────────── */
 const filteredServices = computed(() => {
     let result = props.services.filter((s: any) => {
-        const matchCat = selectedCategory.value === 'all' || s.category === selectedCategory.value;
-        const matchCity = selectedCities.value.length === 0 || selectedCities.value.some((c: string) => s.location.includes(c));
+        const matchCat =
+            selectedCategory.value === 'all' ||
+            s.category === selectedCategory.value;
+        const matchCity =
+            selectedCities.value.length === 0 ||
+            selectedCities.value.some((c: string) => s.location.includes(c));
         const matchPrice = s.price <= priceMax.value;
         const matchRating = s.rating >= ratingFilter.value;
-        const matchSearch = searchQuery.value === '' ||
+        const matchSearch =
+            searchQuery.value === '' ||
             s.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             s.provider.toLowerCase().includes(searchQuery.value.toLowerCase());
-        return matchCat && matchCity && matchPrice && matchRating && matchSearch;
+        return (
+            matchCat && matchCity && matchPrice && matchRating && matchSearch
+        );
     });
 
     // Sorting
-    if (sortBy.value === 'price_asc') result = [...result].sort((a: any, b: any) => a.price - b.price);
-    else if (sortBy.value === 'price_desc') result = [...result].sort((a: any, b: any) => b.price - a.price);
-    else if (sortBy.value === 'rating') result = [...result].sort((a: any, b: any) => b.rating - a.rating);
-    else if (sortBy.value === 'reviews') result = [...result].sort((a: any, b: any) => b.reviews - a.reviews);
+    if (sortBy.value === 'price_asc')
+        result = [...result].sort((a: any, b: any) => a.price - b.price);
+    else if (sortBy.value === 'price_desc')
+        result = [...result].sort((a: any, b: any) => b.price - a.price);
+    else if (sortBy.value === 'rating')
+        result = [...result].sort((a: any, b: any) => b.rating - a.rating);
+    else if (sortBy.value === 'reviews')
+        result = [...result].sort((a: any, b: any) => b.reviews - a.reviews);
 
     return result;
 });
 
-const totalPages = computed(() => Math.ceil(filteredServices.value.length / perPage));
+const totalPages = computed(() =>
+    Math.ceil(filteredServices.value.length / perPage),
+);
 
 const paginatedServices = computed(() => {
     const start = (currentPage.value - 1) * perPage;
@@ -168,7 +177,12 @@ const paginationRange = computed(() => {
     } else {
         pages.push(1);
         if (current > 3) pages.push('...');
-        for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+        for (
+            let i = Math.max(2, current - 1);
+            i <= Math.min(total - 1, current + 1);
+            i++
+        )
+            pages.push(i);
         if (current < total - 2) pages.push('...');
         pages.push(total);
     }
@@ -185,13 +199,26 @@ const activeFilterCount = computed(() => {
 });
 
 // Reset page on filter change
-watch([selectedCategory, selectedCities, priceMax, ratingFilter, sortBy, searchQuery], () => {
-    currentPage.value = 1;
-});
+watch(
+    [
+        selectedCategory,
+        selectedCities,
+        priceMax,
+        ratingFilter,
+        sortBy,
+        searchQuery,
+    ],
+    () => {
+        currentPage.value = 1;
+    },
+);
 
 /* ──────────────────────────── Helpers ──────────────────────────── */
 const formatVND = (value: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+    }).format(value);
 
 const formatShortVND = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}tr`;
@@ -222,7 +249,7 @@ const badgeColor = (badge: string | null) => {
         'Best seller': 'bg-emerald-100 text-emerald-700 border-emerald-200',
         'Giá tốt': 'bg-emerald-100 text-emerald-700 border-emerald-200',
         'Ưu đãi': 'bg-rose-100 text-rose-700 border-rose-200',
-        'Mới': 'bg-violet-100 text-violet-700 border-violet-200',
+        Mới: 'bg-violet-100 text-violet-700 border-violet-200',
         'Chất lượng': 'bg-indigo-100 text-indigo-700 border-indigo-200',
     };
     return map[badge] ?? 'bg-stone-100 text-stone-700 border-stone-200';
@@ -234,29 +261,53 @@ const badgeColor = (badge: string | null) => {
 
     <MarketplaceLayout>
         <!-- ===== Banner ===== -->
-        <section ref="bannerRef" class="relative overflow-hidden bg-gradient-to-br from-stone-900 via-emerald-950 to-stone-900">
-            <div class="absolute inset-0 bg-[url('https://picsum.photos/seed/dalat-banner/1600/400')] bg-cover bg-center opacity-20"></div>
-            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-900/80 via-transparent to-stone-900/40"></div>
-            <div class="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <section
+            ref="bannerRef"
+            class="relative overflow-hidden bg-gradient-to-br from-stone-900 via-emerald-950 to-stone-900"
+        >
+            <div
+                class="absolute inset-0 bg-[url('https://picsum.photos/seed/dalat-banner/1600/400')] bg-cover bg-center opacity-20"
+            ></div>
+            <div
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-900/80 via-transparent to-stone-900/40"
+            ></div>
+            <div
+                class="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8"
+            >
                 <!-- Breadcrumb -->
                 <nav class="mb-6 flex items-center gap-2 text-sm text-white/60">
-                    <Link href="/" class="flex items-center gap-1 transition hover:text-white">
+                    <Link
+                        href="/"
+                        class="flex items-center gap-1 transition hover:text-white"
+                    >
                         <Home class="size-3.5" /> Trang chủ
                     </Link>
                     <ChevronRight class="size-3.5" />
                     <span class="font-medium text-white">Dịch vụ</span>
                 </nav>
 
-                <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-                    Dịch vụ tại <span class="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">Đà Lạt</span>
+                <h1
+                    class="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl"
+                >
+                    Dịch vụ tại
+                    <span
+                        class="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent"
+                        >Đà Lạt</span
+                    >
                 </h1>
-                <p class="mt-3 max-w-xl text-base leading-relaxed text-stone-300">
-                    Khám phá hàng trăm dịch vụ uy tín — từ du lịch, sửa chữa đến chăm sóc nhà cửa — với giá minh bạch và đánh giá thật từ cộng đồng.
+                <p
+                    class="mt-3 max-w-xl text-base leading-relaxed text-stone-300"
+                >
+                    Khám phá hàng trăm dịch vụ uy tín — từ du lịch, sửa chữa đến
+                    chăm sóc nhà cửa — với giá minh bạch và đánh giá thật từ
+                    cộng đồng.
                 </p>
 
                 <!-- Quick search bar in banner -->
                 <div class="mt-6 max-w-lg">
-                    <div class="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-md transition focus-within:border-white/40 focus-within:bg-white/15">
+                    <div
+                        class="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-md transition focus-within:border-white/40 focus-within:bg-white/15"
+                    >
                         <Search class="size-5 shrink-0 text-white/50" />
                         <input
                             v-model="searchQuery"
@@ -264,7 +315,11 @@ const badgeColor = (badge: string | null) => {
                             placeholder="Tìm kiếm dịch vụ, thợ, tour..."
                             class="w-full bg-transparent text-sm text-white placeholder-white/40 outline-none"
                         />
-                        <button v-if="searchQuery" @click="searchQuery = ''" class="shrink-0 text-white/40 transition hover:text-white">
+                        <button
+                            v-if="searchQuery"
+                            @click="searchQuery = ''"
+                            class="shrink-0 text-white/40 transition hover:text-white"
+                        >
                             <X class="size-4" />
                         </button>
                     </div>
@@ -273,8 +328,7 @@ const badgeColor = (badge: string | null) => {
         </section>
 
         <!-- ===== Main Content ===== -->
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative">
-
+        <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <!-- Mobile: Filter toggle button -->
             <div class="mb-4 flex items-center justify-between md:hidden">
                 <button
@@ -283,27 +337,43 @@ const badgeColor = (badge: string | null) => {
                 >
                     <SlidersHorizontal class="size-4" />
                     Bộ lọc
-                    <span v-if="activeFilterCount > 0" class="flex size-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">{{ activeFilterCount }}</span>
+                    <span
+                        v-if="activeFilterCount > 0"
+                        class="bg-brand flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                        >{{ activeFilterCount }}</span
+                    >
                 </button>
-                <select v-model="sortBy" class="rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-700 outline-none focus:border-brand">
-                    <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                <select
+                    v-model="sortBy"
+                    class="focus:border-brand rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-700 outline-none"
+                >
+                    <option
+                        v-for="opt in sortOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                    >
+                        {{ opt.label }}
+                    </option>
                 </select>
             </div>
 
             <div class="flex gap-8">
-
                 <!-- ===== Sidebar (Desktop) ===== -->
                 <aside class="hidden w-72 shrink-0 md:block">
                     <div class="sticky top-24 space-y-1">
-                        <div class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                        <div
+                            class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm"
+                        >
                             <div class="mb-6 flex items-center justify-between">
-                                <h2 class="flex items-center gap-2 text-lg font-bold text-stone-900">
-                                    <Filter class="size-5 text-brand" /> Bộ lọc
+                                <h2
+                                    class="flex items-center gap-2 text-lg font-bold text-stone-900"
+                                >
+                                    <Filter class="text-brand size-5" /> Bộ lọc
                                 </h2>
                                 <button
                                     v-if="activeFilterCount > 0"
                                     @click="resetFilters"
-                                    class="text-xs font-medium text-brand transition hover:text-brand"
+                                    class="text-brand hover:text-brand text-xs font-medium transition"
                                 >
                                     Đặt lại
                                 </button>
@@ -311,25 +381,51 @@ const badgeColor = (badge: string | null) => {
 
                             <!-- Category -->
                             <div class="mb-6">
-                                <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Danh mục</h3>
+                                <h3
+                                    class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                >
+                                    Danh mục
+                                </h3>
                                 <div class="space-y-1">
                                     <label
                                         v-for="cat in sidebarCategories"
                                         :key="cat.value"
                                         class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition"
-                                        :class="selectedCategory === cat.value ? 'bg-brand-surface text-brand' : 'text-stone-600 hover:bg-stone-50'"
+                                        :class="
+                                            selectedCategory === cat.value
+                                                ? 'bg-brand-surface text-brand'
+                                                : 'text-stone-600 hover:bg-stone-50'
+                                        "
                                     >
-                                        <input v-model="selectedCategory" type="radio" name="category" :value="cat.value" class="sr-only" />
-                                        <component :is="cat.icon" class="size-4 shrink-0" />
-                                        <span class="flex-1 text-sm font-medium">{{ cat.label }}</span>
-                                        <span class="text-xs text-stone-400">({{ cat.count }})</span>
+                                        <input
+                                            v-model="selectedCategory"
+                                            type="radio"
+                                            name="category"
+                                            :value="cat.value"
+                                            class="sr-only"
+                                        />
+                                        <component
+                                            :is="cat.icon"
+                                            class="size-4 shrink-0"
+                                        />
+                                        <span
+                                            class="flex-1 text-sm font-medium"
+                                            >{{ cat.label }}</span
+                                        >
+                                        <span class="text-xs text-stone-400"
+                                            >({{ cat.count }})</span
+                                        >
                                     </label>
                                 </div>
                             </div>
 
                             <!-- City -->
                             <div class="mb-6">
-                                <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Khu vực</h3>
+                                <h3
+                                    class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                >
+                                    Khu vực
+                                </h3>
                                 <div class="space-y-1">
                                     <label
                                         v-for="city in locations"
@@ -338,19 +434,32 @@ const badgeColor = (badge: string | null) => {
                                     >
                                         <input
                                             type="checkbox"
-                                            :checked="selectedCities.includes(city.value)"
+                                            :checked="
+                                                selectedCities.includes(
+                                                    city.value,
+                                                )
+                                            "
                                             @change="toggleCity(city.value)"
-                                            class="size-4 rounded border-stone-300 text-brand focus:ring-brand/30"
+                                            class="text-brand focus:ring-brand/30 size-4 rounded border-stone-300"
                                         />
-                                        <span class="flex-1 text-sm text-stone-700">{{ city.value }}</span>
-                                        <span class="text-xs text-stone-400">({{ city.count }})</span>
+                                        <span
+                                            class="flex-1 text-sm text-stone-700"
+                                            >{{ city.value }}</span
+                                        >
+                                        <span class="text-xs text-stone-400"
+                                            >({{ city.count }})</span
+                                        >
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Price Range -->
                             <div class="mb-6">
-                                <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Khoảng giá</h3>
+                                <h3
+                                    class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                >
+                                    Khoảng giá
+                                </h3>
                                 <input
                                     v-model.number="priceMax"
                                     type="range"
@@ -359,31 +468,56 @@ const badgeColor = (badge: string | null) => {
                                     step="50000"
                                     class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-stone-200 accent-emerald-600"
                                 />
-                                <div class="mt-2 flex items-center justify-between text-xs text-stone-500">
+                                <div
+                                    class="mt-2 flex items-center justify-between text-xs text-stone-500"
+                                >
                                     <span>0đ</span>
-                                    <span class="rounded-lg bg-brand-surface px-2 py-1 font-bold text-brand">{{ formatShortVND(priceMax) }}</span>
+                                    <span
+                                        class="bg-brand-surface text-brand rounded-lg px-2 py-1 font-bold"
+                                        >{{ formatShortVND(priceMax) }}</span
+                                    >
                                     <span>5tr</span>
                                 </div>
                             </div>
 
                             <!-- Rating -->
                             <div>
-                                <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Đánh giá</h3>
+                                <h3
+                                    class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                >
+                                    Đánh giá
+                                </h3>
                                 <div class="space-y-1">
                                     <label
                                         v-for="r in [0, 3, 4, 4.5]"
                                         :key="r"
                                         class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition"
-                                        :class="ratingFilter === r ? 'bg-amber-50 text-amber-700' : 'text-stone-600 hover:bg-stone-50'"
+                                        :class="
+                                            ratingFilter === r
+                                                ? 'bg-amber-50 text-amber-700'
+                                                : 'text-stone-600 hover:bg-stone-50'
+                                        "
                                     >
-                                        <input v-model.number="ratingFilter" type="radio" name="rating" :value="r" class="sr-only" />
+                                        <input
+                                            v-model.number="ratingFilter"
+                                            type="radio"
+                                            name="rating"
+                                            :value="r"
+                                            class="sr-only"
+                                        />
                                         <template v-if="r === 0">
-                                            <span class="text-sm font-medium">Tất cả</span>
+                                            <span class="text-sm font-medium"
+                                                >Tất cả</span
+                                            >
                                         </template>
                                         <template v-else>
-                                            <span class="flex items-center gap-1 text-sm font-medium">
+                                            <span
+                                                class="flex items-center gap-1 text-sm font-medium"
+                                            >
                                                 Từ {{ r }}
-                                                <Star class="size-3.5 fill-amber-400 text-amber-400" />
+                                                <Star
+                                                    class="size-3.5 fill-amber-400 text-amber-400"
+                                                />
                                                 trở lên
                                             </span>
                                         </template>
@@ -397,36 +531,62 @@ const badgeColor = (badge: string | null) => {
                 <!-- ===== Mobile Sidebar Drawer ===== -->
                 <Teleport to="body">
                     <Transition name="drawer">
-                        <div v-if="showMobileFilter" class="fixed inset-0 z-[100] md:hidden">
+                        <div
+                            v-if="showMobileFilter"
+                            class="fixed inset-0 z-[100] md:hidden"
+                        >
                             <!-- Backdrop -->
-                            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showMobileFilter = false"></div>
+                            <div
+                                class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                @click="showMobileFilter = false"
+                            ></div>
 
                             <!-- Drawer Panel -->
-                            <div class="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-[2rem] bg-white px-6 pb-8 pt-4 shadow-2xl">
+                            <div
+                                class="absolute right-0 bottom-0 left-0 max-h-[85vh] overflow-y-auto rounded-t-[2rem] bg-white px-6 pt-4 pb-8 shadow-2xl"
+                            >
                                 <!-- Handle bar -->
-                                <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300"></div>
+                                <div
+                                    class="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300"
+                                ></div>
 
-                                <div class="mb-6 flex items-center justify-between">
-                                    <h2 class="flex items-center gap-2 text-lg font-bold text-stone-900">
-                                        <Filter class="size-5 text-brand" /> Bộ lọc
+                                <div
+                                    class="mb-6 flex items-center justify-between"
+                                >
+                                    <h2
+                                        class="flex items-center gap-2 text-lg font-bold text-stone-900"
+                                    >
+                                        <Filter class="text-brand size-5" /> Bộ
+                                        lọc
                                     </h2>
-                                    <button @click="showMobileFilter = false" class="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600">
+                                    <button
+                                        @click="showMobileFilter = false"
+                                        class="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600"
+                                    >
                                         <X class="size-5" />
                                     </button>
                                 </div>
 
                                 <!-- Category -->
                                 <div class="mb-6">
-                                    <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Danh mục</h3>
+                                    <h3
+                                        class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                    >
+                                        Danh mục
+                                    </h3>
                                     <div class="flex flex-wrap gap-2">
                                         <button
                                             v-for="cat in sidebarCategories"
                                             :key="cat.value"
-                                            @click="selectedCategory = cat.value"
+                                            @click="
+                                                selectedCategory = cat.value
+                                            "
                                             class="rounded-full border px-4 py-2 text-sm font-medium transition"
-                                            :class="selectedCategory === cat.value
-                                                ? 'border-brand bg-brand-surface text-brand'
-                                                : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'"
+                                            :class="
+                                                selectedCategory === cat.value
+                                                    ? 'border-brand bg-brand-surface text-brand'
+                                                    : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                                            "
                                         >
                                             {{ cat.label }}
                                         </button>
@@ -435,16 +595,24 @@ const badgeColor = (badge: string | null) => {
 
                                 <!-- City -->
                                 <div class="mb-6">
-                                    <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Khu vực</h3>
+                                    <h3
+                                        class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                    >
+                                        Khu vực
+                                    </h3>
                                     <div class="flex flex-wrap gap-2">
                                         <button
                                             v-for="city in locations"
                                             :key="city.value"
                                             @click="toggleCity(city.value)"
                                             class="rounded-full border px-4 py-2 text-sm font-medium transition"
-                                            :class="selectedCities.includes(city.value)
-                                                ? 'border-brand bg-brand-surface text-brand'
-                                                : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'"
+                                            :class="
+                                                selectedCities.includes(
+                                                    city.value,
+                                                )
+                                                    ? 'border-brand bg-brand-surface text-brand'
+                                                    : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                                            "
                                         >
                                             {{ city.value }}
                                         </button>
@@ -453,30 +621,58 @@ const badgeColor = (badge: string | null) => {
 
                                 <!-- Price -->
                                 <div class="mb-6">
-                                    <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Khoảng giá</h3>
-                                    <input v-model.number="priceMax" type="range" min="0" max="5000000" step="50000" class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-stone-200 accent-emerald-600" />
-                                    <div class="mt-2 flex items-center justify-between text-xs text-stone-500">
+                                    <h3
+                                        class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                    >
+                                        Khoảng giá
+                                    </h3>
+                                    <input
+                                        v-model.number="priceMax"
+                                        type="range"
+                                        min="0"
+                                        max="5000000"
+                                        step="50000"
+                                        class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-stone-200 accent-emerald-600"
+                                    />
+                                    <div
+                                        class="mt-2 flex items-center justify-between text-xs text-stone-500"
+                                    >
                                         <span>0đ</span>
-                                        <span class="rounded-lg bg-brand-surface px-2 py-1 font-bold text-brand">{{ formatShortVND(priceMax) }}</span>
+                                        <span
+                                            class="bg-brand-surface text-brand rounded-lg px-2 py-1 font-bold"
+                                            >{{
+                                                formatShortVND(priceMax)
+                                            }}</span
+                                        >
                                         <span>5tr</span>
                                     </div>
                                 </div>
 
                                 <!-- Rating -->
                                 <div class="mb-8">
-                                    <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-stone-400">Đánh giá</h3>
+                                    <h3
+                                        class="mb-3 text-xs font-bold tracking-[0.2em] text-stone-400 uppercase"
+                                    >
+                                        Đánh giá
+                                    </h3>
                                     <div class="flex flex-wrap gap-2">
                                         <button
                                             v-for="r in [0, 3, 4, 4.5]"
                                             :key="r"
                                             @click="ratingFilter = r"
                                             class="rounded-full border px-4 py-2 text-sm font-medium transition"
-                                            :class="ratingFilter === r
-                                                ? 'border-amber-300 bg-amber-50 text-amber-700'
-                                                : 'border-stone-200 bg-white text-stone-600'"
+                                            :class="
+                                                ratingFilter === r
+                                                    ? 'border-amber-300 bg-amber-50 text-amber-700'
+                                                    : 'border-stone-200 bg-white text-stone-600'
+                                            "
                                         >
-                                            <template v-if="r === 0">Tất cả</template>
-                                            <template v-else>{{ r }}★+</template>
+                                            <template v-if="r === 0"
+                                                >Tất cả</template
+                                            >
+                                            <template v-else
+                                                >{{ r }}★+</template
+                                            >
                                         </button>
                                     </div>
                                 </div>
@@ -491,7 +687,7 @@ const badgeColor = (badge: string | null) => {
                                     </button>
                                     <button
                                         @click="showMobileFilter = false"
-                                        class="flex-1 rounded-2xl bg-brand px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-brand"
+                                        class="bg-brand hover:bg-brand flex-1 rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition"
                                     >
                                         Áp dụng ({{ filteredServices.length }})
                                     </button>
@@ -502,56 +698,143 @@ const badgeColor = (badge: string | null) => {
                 </Teleport>
 
                 <!-- ===== Main Content Area ===== -->
-                <main class="min-w-0 flex-1 relative pb-20">
+                <main class="relative min-w-0 flex-1 pb-20">
                     <!-- Toolbar -->
-                    <div class="mb-6 hidden items-center justify-between md:flex">
+                    <div
+                        class="mb-6 hidden items-center justify-between md:flex"
+                    >
                         <div class="flex items-center gap-3">
-                            <h2 class="text-xl font-bold tracking-tight text-stone-900">
-                                <template v-if="selectedCategory === 'all'">Tất cả dịch vụ</template>
-                                <template v-else>{{ sidebarCategories.find(c => c.value === selectedCategory)?.label }}</template>
+                            <h2
+                                class="text-xl font-bold tracking-tight text-stone-900"
+                            >
+                                <template v-if="selectedCategory === 'all'"
+                                    >Tất cả dịch vụ</template
+                                >
+                                <template v-else>{{
+                                    sidebarCategories.find(
+                                        (c) => c.value === selectedCategory,
+                                    )?.label
+                                }}</template>
                             </h2>
-                            <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-500">{{ filteredServices.length }} kết quả</span>
+                            <span
+                                class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-500"
+                                >{{ filteredServices.length }} kết quả</span
+                            >
                         </div>
 
                         <!-- Sort -->
                         <div class="flex items-center gap-2">
                             <ArrowUpDown class="size-4 text-stone-400" />
                             <span class="text-sm text-stone-500">Sắp xếp:</span>
-                            <select v-model="sortBy" class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-700 outline-none transition focus:border-brand">
-                                <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                            <select
+                                v-model="sortBy"
+                                class="focus:border-brand rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition outline-none"
+                            >
+                                <option
+                                    v-for="opt in sortOptions"
+                                    :key="opt.value"
+                                    :value="opt.value"
+                                >
+                                    {{ opt.label }}
+                                </option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Active filter tags -->
-                    <div v-if="activeFilterCount > 0" class="mb-5 flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-medium text-stone-400">Đang lọc:</span>
-                        <span v-if="selectedCategory !== 'all'" class="inline-flex items-center gap-1 rounded-full border border-brand bg-brand-surface px-3 py-1 text-xs font-medium text-brand">
-                            {{ sidebarCategories.find(c => c.value === selectedCategory)?.label }}
-                            <button @click="selectedCategory = 'all'" class="ml-0.5 text-brand hover:text-brand"><X class="size-3" /></button>
+                    <div
+                        v-if="activeFilterCount > 0"
+                        class="mb-5 flex flex-wrap items-center gap-2"
+                    >
+                        <span class="text-xs font-medium text-stone-400"
+                            >Đang lọc:</span
+                        >
+                        <span
+                            v-if="selectedCategory !== 'all'"
+                            class="border-brand bg-brand-surface text-brand inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium"
+                        >
+                            {{
+                                sidebarCategories.find(
+                                    (c) => c.value === selectedCategory,
+                                )?.label
+                            }}
+                            <button
+                                @click="selectedCategory = 'all'"
+                                class="text-brand hover:text-brand ml-0.5"
+                            >
+                                <X class="size-3" />
+                            </button>
                         </span>
-                        <span v-for="city in selectedCities" :key="city" class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
+                        <span
+                            v-for="city in selectedCities"
+                            :key="city"
+                            class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700"
+                        >
                             {{ city }}
-                            <button @click="toggleCity(city)" class="ml-0.5 text-teal-400 hover:text-teal-600"><X class="size-3" /></button>
+                            <button
+                                @click="toggleCity(city)"
+                                class="ml-0.5 text-teal-400 hover:text-teal-600"
+                            >
+                                <X class="size-3" />
+                            </button>
                         </span>
-                        <span v-if="priceMax < 5000000" class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                        <span
+                            v-if="priceMax < 5000000"
+                            class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
+                        >
                             ≤ {{ formatShortVND(priceMax) }}
-                            <button @click="priceMax = 5000000" class="ml-0.5 text-emerald-400 hover:text-emerald-600"><X class="size-3" /></button>
+                            <button
+                                @click="priceMax = 5000000"
+                                class="ml-0.5 text-emerald-400 hover:text-emerald-600"
+                            >
+                                <X class="size-3" />
+                            </button>
                         </span>
-                        <span v-if="ratingFilter > 0" class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                        <span
+                            v-if="ratingFilter > 0"
+                            class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
+                        >
                             {{ ratingFilter }}★+
-                            <button @click="ratingFilter = 0" class="ml-0.5 text-amber-400 hover:text-amber-600"><X class="size-3" /></button>
+                            <button
+                                @click="ratingFilter = 0"
+                                class="ml-0.5 text-amber-400 hover:text-amber-600"
+                            >
+                                <X class="size-3" />
+                            </button>
                         </span>
-                        <button @click="resetFilters" class="text-xs font-medium text-stone-400 transition hover:text-stone-600">Xóa tất cả</button>
+                        <button
+                            @click="resetFilters"
+                            class="text-xs font-medium text-stone-400 transition hover:text-stone-600"
+                        >
+                            Xóa tất cả
+                        </button>
                     </div>
 
                     <!-- Toggle Map/Grid Button (Fixed at Bottom Center) -->
-                    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                        <button @click="viewMode = viewMode === 'grid' ? 'map' : 'grid'"
-                            class="btn flex items-center gap-2 justify-center bg-stone-900 text-white font-semibold text-sm px-6 py-3 rounded-full shadow-2xl"
-                            style="box-shadow: 0 8px 30px rgba(0,0,0,0.3);">
-                            <component :is="viewMode === 'grid' ? MapIcon : List" class="size-4" />
-                            {{ viewMode === 'grid' ? 'Hiển thị bản đồ' : 'Hiển thị danh sách' }}
+                    <div
+                        class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 sm:bottom-6"
+                    >
+                        <button
+                            @click="
+                                viewMode = viewMode === 'grid' ? 'map' : 'grid'
+                            "
+                            class="btn flex items-center justify-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white shadow-2xl sm:px-6"
+                            :aria-label="
+                                viewMode === 'grid'
+                                    ? 'Hiển thị bản đồ dịch vụ'
+                                    : 'Hiển thị danh sách dịch vụ'
+                            "
+                            style="box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3)"
+                        >
+                            <component
+                                :is="viewMode === 'grid' ? MapIcon : List"
+                                class="size-4"
+                            />
+                            {{
+                                viewMode === 'grid'
+                                    ? 'Hiển thị bản đồ'
+                                    : 'Hiển thị danh sách'
+                            }}
                         </button>
                     </div>
 
@@ -559,7 +842,11 @@ const badgeColor = (badge: string | null) => {
                     <div>
                         <div v-show="viewMode === 'grid'">
                             <!-- ===== Service Grid ===== -->
-                            <div v-if="paginatedServices.length > 0" ref="serviceGridRef" class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                            <div
+                                v-if="paginatedServices.length > 0"
+                                ref="serviceGridRef"
+                                class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
+                            >
                                 <div
                                     v-for="service in paginatedServices"
                                     :key="service.id"
@@ -570,7 +857,9 @@ const badgeColor = (badge: string | null) => {
                                         class="service-card group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-200/50"
                                     >
                                         <!-- Image -->
-                                        <div class="relative h-48 overflow-hidden sm:h-44">
+                                        <div
+                                            class="relative h-48 overflow-hidden sm:h-44"
+                                        >
                                             <img
                                                 :src="service.image"
                                                 :alt="service.title"
@@ -579,53 +868,103 @@ const badgeColor = (badge: string | null) => {
                                                 referrerpolicy="no-referrer"
                                             />
                                             <!-- Gradient overlay -->
-                                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+                                            <div
+                                                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"
+                                            ></div>
 
                                             <!-- Badge -->
                                             <div
                                                 v-if="service.badge"
-                                                class="absolute left-3 top-3 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md"
-                                                :class="badgeColor(service.badge)"
+                                                class="absolute top-3 left-3 rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md"
+                                                :class="
+                                                    badgeColor(service.badge)
+                                                "
                                             >
                                                 {{ service.badge }}
                                             </div>
 
                                             <!-- Rating overlay -->
-                                            <div class="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1.5 text-xs font-bold text-stone-900 shadow-sm backdrop-blur">
-                                                <Star class="size-3.5 fill-amber-400 text-amber-400" />
+                                            <div
+                                                class="absolute right-3 bottom-3 flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1.5 text-xs font-bold text-stone-900 shadow-sm backdrop-blur"
+                                            >
+                                                <Star
+                                                    class="size-3.5 fill-amber-400 text-amber-400"
+                                                />
                                                 {{ service.rating }}
-                                                <span class="font-normal text-stone-400">({{ service.reviews }})</span>
+                                                <span
+                                                    class="font-normal text-stone-400"
+                                                    >({{
+                                                        service.reviews
+                                                    }})</span
+                                                >
                                             </div>
 
                                             <!-- Favorite -->
-                                            <button class="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-white/80 text-stone-400 shadow-sm backdrop-blur transition hover:bg-white hover:text-rose-500" @click.prevent>
+                                            <button
+                                                class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-white/80 text-stone-400 shadow-sm backdrop-blur transition hover:bg-white hover:text-rose-500"
+                                                @click.prevent
+                                            >
                                                 <Heart class="size-4" />
                                             </button>
                                         </div>
 
                                         <!-- Content -->
                                         <div class="flex flex-1 flex-col p-5">
-                                            <div class="mb-2 flex items-center gap-1.5 text-xs text-stone-500">
-                                                <MapPin class="size-3.5 text-stone-400" />
+                                            <div
+                                                class="mb-2 flex items-center gap-1.5 text-xs text-stone-500"
+                                            >
+                                                <MapPin
+                                                    class="size-3.5 text-stone-400"
+                                                />
                                                 {{ service.location }}
                                             </div>
-                                            <h3 class="mb-1 line-clamp-2 text-sm font-bold leading-snug text-stone-900 transition-colors group-hover:text-brand">
+                                            <h3
+                                                class="group-hover:text-brand mb-1 line-clamp-2 text-sm leading-snug font-bold text-stone-900 transition-colors"
+                                            >
                                                 {{ service.title }}
                                             </h3>
-                                            <p class="mb-4 flex items-center gap-1.5 text-xs text-stone-400">
-                                                <BadgeCheck class="size-3.5 text-brand" />
+                                            <p
+                                                class="mb-4 flex items-center gap-1.5 text-xs text-stone-400"
+                                            >
+                                                <BadgeCheck
+                                                    class="text-brand size-3.5"
+                                                />
                                                 {{ service.provider }}
                                             </p>
 
                                             <!-- Price & CTA -->
-                                            <div class="mt-auto flex flex-col border-t border-stone-100 pt-4">
-                                                <div class="mb-3 flex flex-wrap items-baseline gap-1">
-                                                    <span class="text-lg font-black text-brand">{{ formatVND(service.price) }}</span>
-                                                    <span v-if="service.unit" class="text-xs font-medium text-stone-500">/ {{ service.unit }}</span>
+                                            <div
+                                                class="mt-auto flex flex-col border-t border-stone-100 pt-4"
+                                            >
+                                                <div
+                                                    class="mb-3 flex flex-wrap items-baseline gap-1"
+                                                >
+                                                    <span
+                                                        class="text-brand text-lg font-black"
+                                                        >{{
+                                                            formatVND(
+                                                                service.price,
+                                                            )
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        v-if="service.unit"
+                                                        class="text-xs font-medium text-stone-500"
+                                                        >/
+                                                        {{ service.unit }}</span
+                                                    >
                                                 </div>
-                                                <div class="flex items-center justify-between mt-auto">
-                                                    <p class="text-[11px] text-stone-400">Hủy miễn phí trước 2h</p>
-                                                    <button class="btn rounded-full bg-brand px-5 py-2 text-xs font-bold text-white shadow-sm transition group-hover:bg-brand group-hover:shadow-md hover:scale-105 active:scale-95">
+                                                <div
+                                                    class="mt-auto flex items-center justify-between"
+                                                >
+                                                    <p
+                                                        class="text-[11px] text-stone-400"
+                                                    >
+                                                        Hủy miễn phí trước 2h
+                                                    </p>
+                                                    <button
+                                                        class="btn bg-brand group-hover:bg-brand rounded-full px-5 py-2 text-xs font-bold text-white shadow-sm transition group-hover:shadow-md hover:scale-105 active:scale-95"
+                                                    >
                                                         ĐẶT NGAY
                                                     </button>
                                                 </div>
@@ -636,46 +975,78 @@ const badgeColor = (badge: string | null) => {
                             </div>
 
                             <!-- ===== Empty State ===== -->
-                            <div v-else class="flex flex-col items-center justify-center rounded-[2rem] border border-stone-200 bg-white py-20">
-                                <div class="flex size-20 items-center justify-center rounded-full bg-stone-100">
+                            <div
+                                v-else
+                                class="flex flex-col items-center justify-center rounded-[2rem] border border-stone-200 bg-white py-20"
+                            >
+                                <div
+                                    class="flex size-20 items-center justify-center rounded-full bg-stone-100"
+                                >
                                     <Search class="size-8 text-stone-300" />
                                 </div>
-                                <h3 class="mt-5 text-lg font-bold text-stone-900">Không tìm thấy dịch vụ nào</h3>
-                                <p class="mt-2 text-sm text-stone-500">Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
-                                <button @click="resetFilters" class="mt-6 rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand">
+                                <h3
+                                    class="mt-5 text-lg font-bold text-stone-900"
+                                >
+                                    Không tìm thấy dịch vụ nào
+                                </h3>
+                                <p class="mt-2 text-sm text-stone-500">
+                                    Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với
+                                    từ khóa khác.
+                                </p>
+                                <button
+                                    @click="resetFilters"
+                                    class="bg-brand hover:bg-brand mt-6 rounded-full px-6 py-3 text-sm font-semibold text-white transition"
+                                >
                                     Đặt lại bộ lọc
                                 </button>
                             </div>
 
                             <!-- ===== Pagination ===== -->
-                            <div v-if="totalPages > 1" class="mt-10 flex items-center justify-center gap-1.5">
+                            <div
+                                v-if="totalPages > 1"
+                                class="mt-10 flex items-center justify-center gap-1.5"
+                            >
                                 <!-- First -->
                                 <button
                                     @click="currentPage = 1"
                                     :disabled="currentPage === 1"
-                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30"
                                 >
                                     <ChevronsLeft class="size-4" />
                                 </button>
                                 <!-- Prev -->
                                 <button
-                                    @click="currentPage = Math.max(1, currentPage - 1)"
+                                    @click="
+                                        currentPage = Math.max(
+                                            1,
+                                            currentPage - 1,
+                                        )
+                                    "
                                     :disabled="currentPage === 1"
-                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30"
                                 >
                                     <ChevronLeft class="size-4" />
                                 </button>
 
                                 <!-- Page numbers -->
-                                <template v-for="page in paginationRange" :key="page">
-                                    <span v-if="page === '...'" class="flex size-10 items-center justify-center text-sm text-stone-400">…</span>
+                                <template
+                                    v-for="page in paginationRange"
+                                    :key="page"
+                                >
+                                    <span
+                                        v-if="page === '...'"
+                                        class="flex size-10 items-center justify-center text-sm text-stone-400"
+                                        >…</span
+                                    >
                                     <button
                                         v-else
                                         @click="currentPage = page as number"
                                         class="flex size-10 items-center justify-center rounded-xl border text-sm font-semibold transition"
-                                        :class="currentPage === page
-                                            ? 'border-brand bg-brand text-white shadow-sm shadow-brand'
-                                            : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'"
+                                        :class="
+                                            currentPage === page
+                                                ? 'border-brand bg-brand shadow-brand text-white shadow-sm'
+                                                : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                                        "
                                     >
                                         {{ page }}
                                     </button>
@@ -683,9 +1054,14 @@ const badgeColor = (badge: string | null) => {
 
                                 <!-- Next -->
                                 <button
-                                    @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                                    @click="
+                                        currentPage = Math.min(
+                                            totalPages,
+                                            currentPage + 1,
+                                        )
+                                    "
                                     :disabled="currentPage === totalPages"
-                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30"
                                 >
                                     <ChevronRight class="size-4" />
                                 </button>
@@ -693,20 +1069,28 @@ const badgeColor = (badge: string | null) => {
                                 <button
                                     @click="currentPage = totalPages"
                                     :disabled="currentPage === totalPages"
-                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                    class="flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30"
                                 >
                                     <ChevronsRight class="size-4" />
                                 </button>
                             </div>
 
                             <!-- Page info -->
-                            <div v-if="totalPages > 1" class="mt-3 text-center text-xs text-stone-400">
-                                Trang {{ currentPage }} / {{ totalPages }} — Hiển thị {{ paginatedServices.length }} / {{ filteredServices.length }} dịch vụ
+                            <div
+                                v-if="totalPages > 1"
+                                class="mt-3 text-center text-xs text-stone-400"
+                            >
+                                Trang {{ currentPage }} / {{ totalPages }} —
+                                Hiển thị {{ paginatedServices.length }} /
+                                {{ filteredServices.length }} dịch vụ
                             </div>
                         </div>
 
                         <!-- Full height map view -->
-                        <div v-if="viewMode === 'map'" class="h-[650px] w-full rounded-[2rem] overflow-hidden border border-stone-200 shadow-sm relative z-0">
+                        <div
+                            v-if="viewMode === 'map'"
+                            class="relative z-0 h-[650px] w-full overflow-hidden rounded-[2rem] border border-stone-200 shadow-sm"
+                        >
                             <LeafletMap :services="filteredServices" />
                         </div>
                     </div>

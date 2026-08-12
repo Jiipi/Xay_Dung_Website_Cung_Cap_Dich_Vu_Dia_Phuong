@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { AlertTriangle, MapPin, XCircle } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 const props = defineProps<{
     status: number;

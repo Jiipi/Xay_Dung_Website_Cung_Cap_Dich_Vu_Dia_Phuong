@@ -8,10 +8,34 @@ services:
     working_dir: /var/www
     volumes:
       - ./:/var/www
+      - dalat_vendor:/var/www/vendor
+      - dalat_node_modules:/var/www/node_modules
       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    ports:
+      - "8080:8080"
     env_file:
       - .env.docker
     depends_on:
+      - postgres
+
+  reverb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dalat-reverb
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./:/var/www
+      - dalat_vendor:/var/www/vendor
+      - dalat_node_modules:/var/www/node_modules
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env.docker
+    depends_on:
+      - app
       - postgres
 
   nginx:
@@ -22,6 +46,8 @@ services:
       - "8000:80"
     volumes:
       - ./:/var/www
+      - dalat_vendor:/var/www/vendor:ro
+      - dalat_node_modules:/var/www/node_modules:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
@@ -52,4 +78,6 @@ services:
 
 volumes:
   dalat_pgdata:
+  dalat_vendor:
+  dalat_node_modules:
   cloudbeaver_data:

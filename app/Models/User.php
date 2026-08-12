@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -23,9 +24,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $appends = [
-        'name',
-    ];
+    protected $appends = ['name'];
 
     /**
      * The attributes that are mass assignable.
@@ -48,6 +47,7 @@ class User extends Authenticatable
         'gioi_tinh',
         'toa_do_lat',
         'toa_do_lng',
+        'so_du',
         'lan_dang_nhap_cuoi',
     ];
 
@@ -68,7 +68,11 @@ class User extends Authenticatable
      */
     protected function name(): Attribute
     {
-        return Attribute::get(fn (mixed $value, array $attributes): ?string => $attributes['ho_ten'] ?? null);
+        return Attribute::get(
+            fn(mixed $value, array $attributes): ?string => $attributes[
+                'ho_ten'
+            ] ?? null,
+        );
     }
 
     /**
@@ -76,7 +80,11 @@ class User extends Authenticatable
      */
     protected function password(): Attribute
     {
-        return Attribute::get(fn (mixed $value, array $attributes): ?string => $attributes['mat_khau_hash'] ?? null);
+        return Attribute::get(
+            fn(mixed $value, array $attributes): ?string => $attributes[
+                'mat_khau_hash'
+            ] ?? null,
+        );
     }
 
     /**
@@ -106,6 +114,7 @@ class User extends Authenticatable
             'email_da_xac_minh' => 'datetime',
             'mat_khau_hash' => 'hashed',
             'lan_dang_nhap_cuoi' => 'datetime',
+            'so_du' => 'decimal:2',
             'ngay_sinh' => 'date',
             'two_factor_confirmed_at' => 'datetime',
         ];

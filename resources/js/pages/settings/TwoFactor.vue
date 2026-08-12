@@ -1,3 +1,19 @@
+<script lang="ts">
+import { defineComponent, h } from 'vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import ProviderLayout from '@/layouts/ProviderLayout.vue';
+
+export default defineComponent({
+    layout: (createElement, page) => {
+        const role = page.props.auth?.role;
+        let LayoutComponent = CustomerLayout;
+        if (role === 'Admin') LayoutComponent = AdminLayout;
+        else if (role === 'Nhà cung cấp') LayoutComponent = ProviderLayout;
+        return createElement(LayoutComponent, () => page);
+    }
+});
+</script>
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
@@ -9,7 +25,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { usePage } from '@inertiajs/vue3';
-import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { disable, enable, show } from '@/routes/two-factor';
 import type { BreadcrumbItem } from '@/types';
@@ -42,8 +57,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <MarketplaceLayout :role="layoutRole">
-        <Head title="Two-factor authentication" />
+            <Head title="Two-factor authentication" />
 
         <h1 class="sr-only">Two-factor authentication settings</h1>
 
@@ -124,5 +138,4 @@ onUnmounted(() => {
                 />
             </div>
         </SettingsLayout>
-    </MarketplaceLayout>
-</template>
+    </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, Link, usePage, Deferred } from '@inertiajs/vue3';
 import {
     ArrowDownRight,
@@ -23,9 +23,11 @@ import {
     TrendingUp,
     User,
 } from 'lucide-vue-next';
-import ProviderLayout from '@/layouts/ProviderLayout.vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
+import AnimatedCounter from '@/components/ui/AnimatedCounter.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useAnimations } from '@/composables/useAnimations';
+import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 // ─── Props from Controller ───────────────────────────────────
 interface KpiCards {
@@ -296,57 +298,63 @@ function animateChart() {
 }
 
 // ─── Animations ──────────────────────────────────────────────
-const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const { animateHeroEntrance, animateStagger, animateFadeUp, animateParallax } = useAnimations();
 const heroBadge = ref<HTMLElement | null>(null);
 const heroHeadline = ref<HTMLElement | null>(null);
 const heroDesc = ref<HTMLElement | null>(null);
 const heroButtons = ref<HTMLElement | null>(null);
 const heroStats = ref<HTMLElement | null>(null);
-const contentSections = ref<HTMLElement[]>([]);
+
+const heroOrb1 = ref<HTMLElement | null>(null);
+const heroOrb2 = ref<HTMLElement | null>(null);
 
 onMounted(async () => {
     await nextTick();
     animateChart();
     window.addEventListener('resize', drawChart);
-
-    animateHeroEntrance({
-        badge: heroBadge,
-        headline: heroHeadline,
-        description: heroDesc,
-        searchBar: heroButtons,
-        stats: heroStats,
-    });
-    
-    animateStagger('.action-grid', '.action-card');
-    animateStagger('.quick-links', '.quick-link');
-    contentSections.value.forEach(el => {
-        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
-    });
 });
+
+animateHeroEntrance({
+    badge: heroBadge,
+    headline: heroHeadline,
+    description: heroDesc,
+    searchBar: heroButtons,
+    stats: heroStats,
+});
+
+animateParallax(heroOrb1, { speed: -0.4 });
+animateParallax(heroOrb2, { speed: 0.3 });
+
+animateStagger('.action-grid', '.action-card');
+animateStagger('.quick-links', '.quick-link');
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
     <Head title="Nhà cung cấp - Dashboard" />
 
-    <ProviderLayout activePage="dashboard">
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <!-- ══════ Hero Section ══════ -->
             <section class="hero-section overflow-hidden rounded-[2rem] shadow-xl relative text-white">
                 <div class="hero-bg absolute inset-0 z-0"></div>
                 <!-- NOISE OVERLAY -->
                 <div class="absolute inset-0 z-0 opacity-5 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
 
+                <!-- Parallax Drift Orbs -->
+                <div ref="heroOrb1" class="hero-orb absolute -right-20 -top-20 size-[30rem] rounded-full bg-white/10 blur-[80px]"></div>
+                <div ref="heroOrb2" class="hero-orb absolute -bottom-32 -left-20 size-[25rem] rounded-full bg-orange-400/20 blur-[100px]"></div>
+
                 <div class="relative z-10 grid gap-8 px-6 py-12 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
                     <div class="flex flex-col justify-center">
-                        <div ref="heroBadge" class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
+                        <div ref="heroBadge" class="hero-el inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
                             <Sparkles class="size-4" />
                             Bảng điều khiển nhà cung cấp
                         </div>
-                        <h1 ref="heroHeadline" class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
+                        <h1 ref="heroHeadline" class="hero-el mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
                             Chào {{ firstName }}, <br><em class="opacity-85 font-serif italic">kinh doanh tại Đà Lạt</em>
                         </h1>
-                        <p ref="heroDesc" class="mt-4 max-w-2xl text-base leading-7 text-amber-50 sm:text-lg">{{ heroSummary }}</p>
-                        <div ref="heroButtons" class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <p ref="heroDesc" class="hero-el mt-4 max-w-2xl text-base leading-7 text-amber-50 sm:text-lg">{{ heroSummary }}</p>
+                        <div ref="heroButtons" class="hero-el mt-8 flex flex-col gap-3 sm:flex-row">
                             <Link href="/provider/bookings" class="btn inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-orange-950 transition hover:bg-stone-100">
                                 <ClipboardList class="size-4" />
                                 Xem đơn hàng
@@ -358,7 +366,7 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div ref="heroStats" class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                    <div ref="heroStats" class="hero-el grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
                         <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-amber-100/70">
                                 <DollarSign class="size-4" />
@@ -376,7 +384,7 @@ onMounted(async () => {
                                 <Package class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Đơn hàng</p>
                             </div>
-                            <p class="mt-3 font-serif text-4xl text-white">{{ kpiCards.totalOrders }}</p>
+                            <AnimatedCounter class="mt-3 font-serif text-4xl text-white" :target="kpiCards.totalOrders" />
                             <p class="mt-2 text-xs text-amber-200/70">+{{ kpiCards.ordersThisMonth }} tháng này</p>
                         </div>
                         <div class="group relative overflow-hidden border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
@@ -385,7 +393,7 @@ onMounted(async () => {
                                 <Clock class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Chờ xác nhận</p>
                             </div>
-                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ kpiCards.pendingOrders }}</p>
+                            <AnimatedCounter class="relative z-10 mt-3 font-serif text-4xl text-white" :target="kpiCards.pendingOrders" />
                         </div>
                         <div class="p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-amber-100/70">
@@ -401,7 +409,7 @@ onMounted(async () => {
 
             <!-- ══════ Action Items + Quick Links ══════ -->
             <div class="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Cần xử lý</p>
@@ -422,7 +430,7 @@ onMounted(async () => {
                 </section>
 
                 <div class="space-y-6">
-                    <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                    <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Đi nhanh</p>
@@ -440,7 +448,7 @@ onMounted(async () => {
                     </section>
 
                     <!-- Provider Profile Summary -->
-                    <section class="rounded-[2rem] border border-stone-200 bg-stone-950 p-6 text-white shadow-sm">
+                    <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-stone-950 p-6 text-white shadow-sm">
                         <div class="flex items-center gap-3">
                             <div class="flex size-12 items-center justify-center rounded-2xl bg-white/10"><User class="size-5" /></div>
                             <div>
@@ -470,7 +478,7 @@ onMounted(async () => {
             <!-- ══════ Revenue Chart + Upcoming Appointments ══════ -->
             <div class="mt-8 grid gap-6 lg:grid-cols-5">
                 <!-- Revenue Chart -->
-                <section ref="contentSections" class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-3">
+                <section class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-3">
                     <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Biểu đồ</p>
@@ -491,7 +499,7 @@ onMounted(async () => {
                 </section>
 
                 <!-- Upcoming Appointments -->
-                <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-2">
+                <section class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-2">
                     <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Sắp tới</p>
@@ -538,7 +546,7 @@ onMounted(async () => {
             </div>
 
             <!-- ══════ Recent Orders ══════ -->
-            <section ref="contentSections" class="mt-8 overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+            <section class="animate-fade-up mt-8 overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
                 <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Gần đây</p>
@@ -589,7 +597,7 @@ onMounted(async () => {
             <!-- ══════ Top Services + Latest Reviews ══════ -->
             <div class="mt-8 grid gap-6 lg:grid-cols-2">
                 <!-- Top Services -->
-                <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                <section class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
                     <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Nổi bật</p>
@@ -631,7 +639,7 @@ onMounted(async () => {
                 </section>
 
                 <!-- Latest Reviews -->
-                <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                <section class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
                     <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">Phản hồi</p>
@@ -683,8 +691,7 @@ onMounted(async () => {
                 </section>
             </div>
         </div>
-    </ProviderLayout>
-</template>
+    </template>
 
 <style scoped>
 .hero-section {
@@ -697,5 +704,37 @@ onMounted(async () => {
         #c2410c 40%,     /* Cam cháy */
         #f97316 100%     /* Cam sáng */
     );
+}
+.hero-el {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* === Hero Orbs Drift (CSS — always running, parallax via GSAP) === */
+.hero-orb {
+    animation: drift 10s ease-in-out infinite;
+    will-change: transform;
+}
+.hero-orb:last-of-type {
+    animation-direction: reverse;
+    animation-duration: 12s;
+}
+@keyframes drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(18px, -14px, 0) scale(1.05); }
+}
+
+/* === Initial State for GSAP Animations === */
+.action-card, .quick-link, .animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-el, .hero-orb, .action-card, .quick-link, .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
 </style>

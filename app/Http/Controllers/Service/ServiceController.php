@@ -10,7 +10,7 @@ use App\Models\DanhMucDichVu;
 use App\Models\DichVu;
 use App\Models\YeuThich;
 use App\Repositories\Contracts\Service\ServiceRepositoryInterface;
-use App\Services\AI\GeminiItineraryPlannerService;
+use App\Services\AI\GptItineraryPlannerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -129,6 +129,8 @@ class ServiceController extends Controller
     public function show(int $id): Response
     {
         $svc = DichVu::with(['nhaCungCap.hoSoNhaCungCap', 'danhMuc.parent'])
+            ->where('trang_thai_duyet', 'da_duyet')
+            ->where('trang_thai_hoat_dong', 'hoat_dong')
             ->findOrFail($id);
 
         $hoso = $svc->nhaCungCap?->hoSoNhaCungCap;
@@ -264,7 +266,8 @@ class ServiceController extends Controller
             })->values()->all();
 
         // Lấy locations có dịch vụ
-        $locations = DichVu::where('trang_thai_hoat_dong', 'hoat_dong')
+        $locations = DichVu::where('trang_thai_duyet', 'da_duyet')
+            ->where('trang_thai_hoat_dong', 'hoat_dong')
             ->whereNotNull('dia_chi_hien_thi')
             ->pluck('dia_chi_hien_thi')
             ->map(fn ($loc) => trim(last(explode("\n", $loc))))
@@ -282,7 +285,7 @@ class ServiceController extends Controller
 
     public function generateAiPlan(
         GenerateAiPlanRequest $request,
-        GeminiItineraryPlannerService $plannerService
+        GptItineraryPlannerService $plannerService
     ): JsonResponse {
         $result = $plannerService->generatePlan($request->validated(), $request->user());
 
@@ -291,7 +294,7 @@ class ServiceController extends Controller
 
     public function chatAiPlanner(
         PlannerChatRequest $request,
-        GeminiItineraryPlannerService $plannerService
+        GptItineraryPlannerService $plannerService
     ): JsonResponse {
         $result = $plannerService->chat($request->validated(), $request->user());
 

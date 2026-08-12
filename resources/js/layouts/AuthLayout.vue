@@ -49,9 +49,7 @@ const highlights = [
                             Dalat Services
                         </Link>
 
-                        <div class="hidden rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/70 backdrop-blur md:block">
-                            Laravel 12 + Inertia + Vue + PostgreSQL
-                        </div>
+
                     </div>
 
                     <div class="mt-14 max-w-2xl lg:mt-24">

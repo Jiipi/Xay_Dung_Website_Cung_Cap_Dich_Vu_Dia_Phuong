@@ -22,12 +22,16 @@ export type UseCurrentUrlReturn = {
     ) => T | F;
 };
 
-const page = usePage();
-const currentUrlReactive = computed(
-    () => new URL(page.url, window?.location.origin).pathname,
-);
-
 export function useCurrentUrl(): UseCurrentUrlReturn {
+    const page = usePage();
+    const currentUrlReactive = computed(() => {
+        const origin =
+            typeof window === 'undefined'
+                ? 'http://localhost'
+                : window.location.origin;
+        return new URL(page.url, origin).pathname;
+    });
+
     function isCurrentUrl(
         urlToCheck: NonNullable<InertiaLinkProps['href']>,
         currentUrl?: string,
@@ -59,11 +63,11 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         return isCurrentUrl(urlToCheck, currentUrl, true);
     }
 
-    function whenCurrentUrl(
+    function whenCurrentUrl<T, F = null>(
         urlToCheck: NonNullable<InertiaLinkProps['href']>,
-        ifTrue: any,
-        ifFalse: any = null,
-    ) {
+        ifTrue: T,
+        ifFalse: F = null as F,
+    ): T | F {
         return isCurrentUrl(urlToCheck) ? ifTrue : ifFalse;
     }
 

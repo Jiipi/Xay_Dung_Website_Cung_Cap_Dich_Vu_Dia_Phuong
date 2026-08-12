@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
+defineOptions({ layout: AdminLayout });
 import { Head } from '@inertiajs/vue3';
-import { BarChart3, DollarSign, Sparkles, Star, TrendingUp } from 'lucide-vue-next';
+import { BarChart3, DollarSign, Star, TrendingUp } from 'lucide-vue-next';
+import { ref, onMounted, nextTick } from 'vue';
+import { useAnimations } from '@/composables/useAnimations';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface RevenueMonth { month: string; revenue: number; orders: number; }
@@ -82,8 +84,9 @@ function drawRevenueChart() {
         const x = padL + i * barW + (barW - innerW) / 2;
         const y = padT + cH - barH;
         const grad = ctx.createLinearGradient(x, y, x, padT + cH);
-        grad.addColorStop(0, '#3b82f6');
-        grad.addColorStop(1, '#6366f1');
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(0.5, '#6366f1');
+        grad.addColorStop(1, '#4f46e5');
         ctx.fillStyle = grad;
         const r = 5;
         ctx.beginPath();
@@ -92,6 +95,12 @@ function drawRevenueChart() {
         ctx.lineTo(x + innerW, padT + cH); ctx.lineTo(x, padT + cH);
         ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
         ctx.fill();
+
+        // Glow
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(x, y, innerW, 2);
+        ctx.shadowBlur = 0;
 
         ctx.fillStyle = '#78716c'; ctx.textAlign = 'center'; ctx.font = '10px Inter, system-ui, sans-serif';
         ctx.fillText(d.month, padL + i * barW + barW / 2, h - padB + 15);
@@ -163,36 +172,26 @@ onMounted(async () => {
     drawUserChart();
     window.addEventListener('resize', () => { drawRevenueChart(); drawUserChart(); });
 });
+
+// Animations
+const { animateFadeUp } = useAnimations();
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
     <Head title="Thống kê" />
 
-    <AdminLayout activePage="stats">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
-            <!-- Page Header -->
-            <div class="admin-page-header">
-                <div class="admin-page-header__accent" />
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <Sparkles class="size-3.5 text-blue-500" />
-                        <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500/70">Phân tích</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-stone-800">Thống kê</h1>
-                    <p class="mt-1 text-sm text-stone-500">Phân tích và báo cáo tổng hợp</p>
-                </div>
-            </div>
-
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
             <!-- Summary Cards -->
-            <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div class="admin-summary-card group">
+            <div class="animate-fade-up grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="mb-2 rounded-xl bg-blue-50 p-2 w-fit text-blue-500 transition group-hover:scale-110">
                         <DollarSign class="size-5" />
                     </div>
                     <p class="text-xl font-bold text-stone-800">{{ formatVND(generalStats.totalRevenue) }}</p>
                     <p class="text-xs text-stone-500">Tổng doanh thu</p>
                 </div>
-                <div class="admin-summary-card group">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="mb-2 rounded-xl bg-emerald-50 p-2 w-fit text-emerald-500 transition group-hover:scale-110">
                         <BarChart3 class="size-5" />
                     </div>
@@ -200,14 +199,14 @@ onMounted(async () => {
                     <p class="text-xs text-stone-500">Tổng đơn hàng</p>
                     <p class="mt-1 text-[10px] text-emerald-600">{{ generalStats.completedOrders }} hoàn thành · {{ generalStats.cancelledOrders }} đã hủy</p>
                 </div>
-                <div class="admin-summary-card group">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="mb-2 rounded-xl bg-violet-50 p-2 w-fit text-violet-500 transition group-hover:scale-110">
                         <TrendingUp class="size-5" />
                     </div>
                     <p class="text-xl font-bold text-stone-800">{{ formatVND(generalStats.avgOrderValue) }}</p>
                     <p class="text-xs text-stone-500">Giá trị TB / đơn</p>
                 </div>
-                <div class="admin-summary-card group">
+                <div class="group rounded-[1.5rem] border border-stone-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                     <div class="mb-2 rounded-xl bg-amber-50 p-2 w-fit text-amber-500 transition group-hover:scale-110">
                         <Star class="size-5" />
                     </div>
@@ -217,22 +216,22 @@ onMounted(async () => {
             </div>
 
             <!-- Charts Row -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
-                <div class="admin-card lg:col-span-3">
-                    <div class="admin-card__header">
+            <div class="animate-fade-up grid grid-cols-1 gap-6 lg:grid-cols-5">
+                <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-3">
+                    <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <h2 class="text-base font-semibold text-stone-800">Doanh thu 12 tháng</h2>
                             <p class="mt-0.5 text-xs text-stone-400">Biểu đồ doanh thu toàn nền tảng</p>
                         </div>
-                        <span class="admin-card__badge">12 tháng</span>
+                        <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-500">12 tháng</span>
                     </div>
                     <div class="p-4">
                         <canvas ref="revenueCanvas" class="h-72 w-full" />
                     </div>
                 </div>
 
-                <div class="admin-card lg:col-span-2">
-                    <div class="admin-card__header">
+                <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm lg:col-span-2">
+                    <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <h2 class="text-base font-semibold text-stone-800">Tăng trưởng người dùng</h2>
                             <p class="mt-0.5 text-xs text-stone-400">Đăng ký mới theo tháng</p>
@@ -245,10 +244,10 @@ onMounted(async () => {
             </div>
 
             <!-- Bottom Row -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="animate-fade-up grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- Top Services -->
-                <div class="admin-card">
-                    <div class="admin-card__header">
+                <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <h2 class="text-base font-semibold text-stone-800">Top dịch vụ</h2>
                             <p class="mt-0.5 text-xs text-stone-400">Dịch vụ có doanh thu cao nhất</p>
@@ -257,7 +256,7 @@ onMounted(async () => {
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead>
-                                <tr class="border-b border-stone-200 text-xs font-medium uppercase tracking-wider text-stone-500">
+                                <tr class="border-b border-stone-100 text-xs font-medium uppercase tracking-[0.16em] text-stone-400">
                                     <th class="px-6 py-3">#</th>
                                     <th class="px-6 py-3">Dịch vụ</th>
                                     <th class="px-6 py-3">Số đơn</th>
@@ -268,7 +267,7 @@ onMounted(async () => {
                                 <tr
                                     v-for="(sv, i) in topServices"
                                     :key="sv.ten_dich_vu"
-                                    class="admin-table-row"
+                                    class="border-b border-stone-50 transition-colors hover:bg-stone-50/80"
                                 >
                                     <td class="px-6 py-2.5">
                                         <span :class="[
@@ -291,8 +290,8 @@ onMounted(async () => {
                 </div>
 
                 <!-- Category Distribution -->
-                <div class="admin-card">
-                    <div class="admin-card__header">
+                <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                         <div>
                             <h2 class="text-base font-semibold text-stone-800">Phân bố theo danh mục</h2>
                             <p class="mt-0.5 text-xs text-stone-400">Số lượng dịch vụ mỗi danh mục</p>
@@ -324,62 +323,18 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
-    </AdminLayout>
-</template>
+    </template>
 
 <style scoped>
-.admin-page-header {
-    position: relative;
-    padding: 0.5rem 0 0.5rem 1rem;
+.animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
 }
-.admin-page-header__accent {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px; border-radius: 3px;
-    background: linear-gradient(to bottom, #3b82f6, #6366f1);
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
-
-.admin-summary-card {
-    border-radius: 1.5rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    padding: 1.25rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.admin-summary-card:hover {
-    border-color: #d6d3d1;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-}
-
-.admin-card {
-    overflow: hidden;
-    border-radius: 1.5rem;
-    border: 1px solid var(--dl-warm-border, #e7e5e4);
-    background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.admin-card__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--dl-warm-border, #e7e5e4);
-    padding: 1rem 1.5rem;
-}
-.admin-card__badge {
-    border-radius: 0.5rem;
-    background: #f5f5f4;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #78716c;
-}
-
-.admin-table-row {
-    border-bottom: 1px solid #f5f5f4;
-    transition: background 0.2s ease;
-}
-.admin-table-row:hover { background: #fafaf9; }
 </style>

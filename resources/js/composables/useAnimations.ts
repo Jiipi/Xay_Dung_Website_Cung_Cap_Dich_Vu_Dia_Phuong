@@ -12,7 +12,8 @@
 
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { nextTick, onMounted, onUnmounted, type Ref } from 'vue';
+import { nextTick, onMounted, onUnmounted } from 'vue';
+import type { Ref } from 'vue';
 
 // Register plugin once
 if (typeof window !== 'undefined') {
@@ -24,11 +25,11 @@ interface AnimationOptions {
     duration?: number;
     delay?: number;
     ease?: string;
-    start?: string;       // ScrollTrigger start position
-    end?: string;         // ScrollTrigger end position
+    start?: string; // ScrollTrigger start position
+    end?: string; // ScrollTrigger end position
     scrub?: boolean | number;
-    once?: boolean;       // play only once (default: true)
-    mobile?: boolean;     // enable on mobile (default: true)
+    once?: boolean; // play only once (default: true)
+    mobile?: boolean; // enable on mobile (default: true)
 }
 
 interface StaggerOptions extends AnimationOptions {
@@ -37,7 +38,7 @@ interface StaggerOptions extends AnimationOptions {
 }
 
 interface ParallaxOptions {
-    speed?: number;       // -1 to 1 (negative = opposite direction)
+    speed?: number; // -1 to 1 (negative = opposite direction)
     start?: string;
     end?: string;
 }
@@ -65,17 +66,6 @@ function resolveElement(
     if (el instanceof HTMLElement) return el;
     // Vue Ref
     return (el as Ref<HTMLElement | null>).value;
-}
-
-/** Resolve multiple elements */
-function resolveElements(
-    els: Ref<HTMLElement | null> | HTMLElement | string | HTMLElement[] | null,
-): HTMLElement | HTMLElement[] | string | null {
-    if (!els) return null;
-    if (typeof els === 'string') return els;
-    if (Array.isArray(els)) return els;
-    if (els instanceof HTMLElement) return els;
-    return (els as Ref<HTMLElement | null>).value;
 }
 
 // ─── Main Composable ─────────────────────────────────────────────
@@ -115,7 +105,7 @@ export function useAnimations() {
      * Fade + slide up when element scrolls into view
      */
     function animateFadeUp(
-        el: Ref<HTMLElement | null> | HTMLElement | string,
+        el: Ref<HTMLElement | null> | HTMLElement | string | HTMLElement[],
         opts: AnimationOptions = {},
     ) {
         const {
@@ -133,29 +123,38 @@ export function useAnimations() {
             if (prefersReducedMotion()) return;
             if (!mobile && isMobileViewport()) return;
 
-            const target = resolveElement(el);
-            if (!target) return;
+            let targets: HTMLElement[] = [];
+            if (typeof el === 'string') {
+                targets = Array.from(document.querySelectorAll(el));
+            } else if (Array.isArray(el)) {
+                targets = el;
+            } else {
+                const resolved = resolveElement(el);
+                if (resolved instanceof HTMLElement) targets = [resolved];
+            }
 
-            const tw = gsap.fromTo(
-                target,
-                { y: 30, opacity: 0, force3D: true },
-                {
-                    y: 0,
-                    opacity: 1,
-                    duration,
-                    delay,
-                    ease,
-                    scrollTrigger: {
-                        trigger: target,
-                        start,
-                        toggleActions: once
-                            ? 'play none none none'
-                            : 'play none none reverse',
-                        onEnter: (self) => trackTrigger(self),
+            targets.forEach((target) => {
+                const tw = gsap.fromTo(
+                    target,
+                    { y: 30, opacity: 0, force3D: true },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration,
+                        delay,
+                        ease,
+                        scrollTrigger: {
+                            trigger: target,
+                            start,
+                            toggleActions: once
+                                ? 'play none none none'
+                                : 'play none none reverse',
+                            onEnter: (self) => trackTrigger(self),
+                        },
                     },
-                },
-            );
-            trackTween(tw);
+                );
+                trackTween(tw);
+            });
         });
     }
 
@@ -197,8 +196,8 @@ export function useAnimations() {
             if (!children.length) return;
 
             // Set initial state - use smaller Y and force GPU acceleration layer ahead of time
-            gsap.set(children, { 
-                y: 30, 
+            gsap.set(children, {
+                y: 30,
                 opacity: 0,
                 force3D: true, // Force GPU layer
             });
@@ -208,7 +207,7 @@ export function useAnimations() {
                 opacity: 1,
                 duration: duration * 0.8, // Slightly faster to feel punchier
                 delay,
-                ease: 'power2.out', // power2 is cheaper to calculate than power3
+                ease,
                 stagger: { each: stagger, from },
                 scrollTrigger: {
                     trigger: triggerEl,
@@ -230,11 +229,7 @@ export function useAnimations() {
         el: Ref<HTMLElement | null> | HTMLElement | string,
         opts: ParallaxOptions = {},
     ) {
-        const {
-            speed = -0.3,
-            start = 'top bottom',
-            end = 'bottom top',
-        } = opts;
+        const { speed = -0.3, start = 'top bottom', end = 'bottom top' } = opts;
 
         onMounted(async () => {
             await nextTick();
@@ -430,6 +425,8 @@ export function useAnimations() {
         header: Ref<HTMLElement | null>,
         opts: { hideDistance?: number } = {},
     ) {
+        let isHidden = false;
+
         onMounted(async () => {
             await nextTick();
             if (typeof window === 'undefined') return;
@@ -446,6 +443,8 @@ export function useAnimations() {
                     const scroll = self.scroll();
 
                     if (scroll < (opts.hideDistance ?? 100)) {
+                        if (!isHidden) return;
+                        isHidden = false;
                         gsap.to(el, {
                             y: 0,
                             duration: 0.3,
@@ -454,11 +453,16 @@ export function useAnimations() {
                         return;
                     }
 
-                    // Scroll down → hide, scroll up → show
+                    const shouldHide = direction === 1;
+                    if (shouldHide === isHidden) return;
+
+                    // Scroll down hides, scroll up shows without starting duplicate tweens.
+                    isHidden = shouldHide;
                     gsap.to(el, {
-                        y: direction === 1 ? -el.offsetHeight : 0,
+                        y: shouldHide ? -el.offsetHeight : 0,
                         duration: 0.3,
                         ease: 'power2.out',
+                        overwrite: 'auto',
                     });
                 },
             });
@@ -509,8 +513,10 @@ export function useAnimations() {
 
         onUnmounted(() => {
             const target = el.value;
-            if (target && moveFn) target.removeEventListener('mousemove', moveFn);
-            if (target && leaveFn) target.removeEventListener('mouseleave', leaveFn);
+            if (target && moveFn)
+                target.removeEventListener('mousemove', moveFn);
+            if (target && leaveFn)
+                target.removeEventListener('mouseleave', leaveFn);
         });
     }
 

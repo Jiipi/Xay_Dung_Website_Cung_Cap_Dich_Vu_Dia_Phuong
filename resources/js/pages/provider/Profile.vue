@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import {
     Building2,
@@ -10,6 +10,7 @@ import {
     FileText,
     Globe,
     Loader2,
+    Lock,
     MapPin,
     Phone,
     Save,
@@ -17,6 +18,7 @@ import {
     Upload,
     User,
 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface ProfileData {
@@ -39,18 +41,28 @@ interface UserData {
     anh_dai_dien: string | null;
 }
 
-const props = withDefaults(defineProps<{
-    profile: ProfileData | null;
-    user: UserData;
-}>(), {
-    profile: null,
-    user: () => ({ ho_ten: '', email: '', so_dien_thoai: null, anh_dai_dien: null }),
-});
+const props = withDefaults(
+    defineProps<{
+        profile: ProfileData | null;
+        user: UserData;
+    }>(),
+    {
+        profile: null,
+        user: () => ({
+            ho_ten: '',
+            email: '',
+            so_dien_thoai: null,
+            anh_dai_dien: null,
+        }),
+    },
+);
 
 const page = usePage();
 const flash = computed(() => ({
     success: page.props.flash?.success as string | undefined,
 }));
+
+const isChangingPassword = ref(false);
 
 const form = useForm({
     ho_ten: props.user?.ho_ten ?? '',
@@ -65,6 +77,9 @@ const form = useForm({
     stk_ngan_hang: props.profile?.stk_ngan_hang ?? '',
     ten_ngan_hang: props.profile?.ten_ngan_hang ?? '',
     ten_chu_tk: props.profile?.ten_chu_tk ?? '',
+    current_password: '',
+    password: '',
+    password_confirmation: '',
 });
 
 const avatarPreview = ref<string | null>(props.user?.anh_dai_dien ?? null);
@@ -72,18 +87,53 @@ const avatarPreview = ref<string | null>(props.user?.anh_dai_dien ?? null);
 function handleAvatarChange(e: Event) {
     const input = e.target as HTMLInputElement;
     if (input.files?.[0]) {
+        if (input.files[0].size > 2 * 1024 * 1024) {
+            alert('Kích thước ảnh không được vượt quá 2MB.');
+            input.value = '';
+            return;
+        }
         form.anh_dai_dien = input.files[0];
         const reader = new FileReader();
         reader.onload = (ev) => {
             avatarPreview.value = ev.target?.result as string;
         };
         reader.readAsDataURL(input.files[0]);
+        input.value = '';
     }
 }
 
 function submit() {
-    form.post('/provider/profile', {
+    if (!isChangingPassword.value) {
+        form.current_password = '';
+        form.password = '';
+        form.password_confirmation = '';
+    }
+
+    form.transform((data) => {
+        const cleaned: Record<string, any> = {};
+        for (const [key, value] of Object.entries(data)) {
+            if (value !== null) {
+                cleaned[key] = value;
+            }
+        }
+        return cleaned;
+    }).post('/provider/profile/update', {
         forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.reset('current_password', 'password', 'password_confirmation');
+            form.anh_dai_dien = null;
+        },
+        onError: (errors) => {
+            if (errors.anh_dai_dien) {
+                alert('Lỗi tải ảnh: ' + errors.anh_dai_dien);
+            }
+            if (errors.password || errors.current_password) {
+                alert(
+                    'Lỗi đổi mật khẩu: Vui lòng kiểm tra lại thông tin mật khẩu ở dưới cùng.',
+                );
+            }
+        },
     });
 }
 </script>
@@ -91,153 +141,408 @@ function submit() {
 <template>
     <Head title="Hồ sơ nhà cung cấp" />
 
-    <ProviderLayout activePage="profile">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <div class="space-y-6">
-                    <!-- Flash -->
-                    <div v-if="flash.success" class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        <CheckCircle2 class="size-5 shrink-0" /> {{ flash.success }}
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="space-y-6">
+            <!-- Flash -->
+            <div
+                v-if="flash.success"
+                class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+            >
+                <CheckCircle2 class="size-5 shrink-0" /> {{ flash.success }}
+            </div>
+
+            <form @submit.prevent="submit" class="space-y-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-bold text-stone-950">
+                            Hồ sơ nhà cung cấp
+                        </h1>
+                        <p class="text-sm text-stone-500">
+                            Quản lý thông tin thương hiệu và tài khoản
+                        </p>
+                    </div>
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-50"
+                    >
+                        <Loader2
+                            v-if="form.processing"
+                            class="size-4 animate-spin"
+                        />
+                        <Save v-else class="size-4" />
+                        Lưu thay đổi
+                    </button>
+                </div>
+
+                <!-- Avatar & Personal Info -->
+                <div
+                    class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+                >
+                    <h2
+                        class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950"
+                    >
+                        <User class="text-brand size-5" /> Thông tin cá nhân
+                    </h2>
+                    <div class="flex flex-col gap-6 sm:flex-row">
+                        <!-- Avatar -->
+                        <div class="flex flex-col items-center gap-3">
+                            <div
+                                class="relative size-24 overflow-hidden rounded-full bg-stone-100 ring-4 ring-stone-200/50"
+                            >
+                                <img
+                                    v-if="avatarPreview"
+                                    :src="avatarPreview"
+                                    class="size-full object-cover"
+                                    referrerpolicy="no-referrer"
+                                />
+                                <div
+                                    v-else
+                                    class="flex size-full items-center justify-center"
+                                >
+                                    <User class="size-8 text-stone-300" />
+                                </div>
+                            </div>
+                            <label
+                                class="flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50"
+                            >
+                                <Upload class="size-3.5" /> Đổi ảnh
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden"
+                                    @change="handleAvatarChange"
+                                />
+                            </label>
+                            <p
+                                v-if="form.errors.anh_dai_dien"
+                                class="mt-1 text-xs text-red-600"
+                            >
+                                {{ form.errors.anh_dai_dien }}
+                            </p>
+                        </div>
+
+                        <!-- Fields -->
+                        <div class="grid flex-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Họ tên
+                                    <span class="text-red-500">*</span></label
+                                >
+                                <input
+                                    v-model="form.ho_ten"
+                                    type="text"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                                <p
+                                    v-if="form.errors.ho_ten"
+                                    class="mt-1 text-xs text-red-600"
+                                >
+                                    {{ form.errors.ho_ten }}
+                                </p>
+                            </div>
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Email</label
+                                >
+                                <input
+                                    :value="user.email"
+                                    type="email"
+                                    disabled
+                                    class="w-full rounded-xl border border-stone-200 bg-stone-100 px-4 py-3 text-sm text-stone-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Số điện thoại</label
+                                >
+                                <div class="relative">
+                                    <Phone
+                                        class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-stone-400"
+                                    />
+                                    <input
+                                        v-model="form.so_dien_thoai"
+                                        type="text"
+                                        placeholder="0912 345 678"
+                                        class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pr-4 pl-11 text-sm outline-none focus:bg-white focus:ring-2"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin thương hiệu -->
+                <div
+                    class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+                >
+                    <h2
+                        class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950"
+                    >
+                        <Building2 class="text-brand size-5" /> Thông tin thương
+                        hiệu
+                    </h2>
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Tên thương hiệu
+                                <span class="text-red-500">*</span></label
+                            >
+                            <input
+                                v-model="form.ten_thuong_hieu"
+                                type="text"
+                                placeholder="VD: Dịch Vụ Pro Đà Lạt"
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                                :class="{
+                                    'border-red-300':
+                                        form.errors.ten_thuong_hieu,
+                                }"
+                            />
+                            <p
+                                v-if="form.errors.ten_thuong_hieu"
+                                class="mt-1 text-xs text-red-600"
+                            >
+                                {{ form.errors.ten_thuong_hieu }}
+                            </p>
+                        </div>
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Năm kinh nghiệm</label
+                            >
+                            <input
+                                v-model="form.nam_kinh_nghiem"
+                                type="number"
+                                min="0"
+                                max="100"
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                            />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Giới thiệu</label
+                            >
+                            <textarea
+                                v-model="form.gioi_thieu"
+                                rows="4"
+                                placeholder="Mô tả về thương hiệu, lĩnh vực chuyên môn, cam kết chất lượng..."
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Website</label
+                            >
+                            <div class="relative">
+                                <Globe
+                                    class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-stone-400"
+                                />
+                                <input
+                                    v-model="form.website"
+                                    type="url"
+                                    placeholder="https://"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pr-4 pl-11 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Facebook</label
+                            >
+                            <div class="relative">
+                                <Facebook
+                                    class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-stone-400"
+                                />
+                                <input
+                                    v-model="form.facebook"
+                                    type="text"
+                                    placeholder="facebook.com/..."
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pr-4 pl-11 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Giấy phép kinh doanh</label
+                            >
+                            <div class="relative">
+                                <FileText
+                                    class="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-stone-400"
+                                />
+                                <input
+                                    v-model="form.giay_phep_kinh_doanh"
+                                    type="text"
+                                    placeholder="Số giấy phép hoặc link file"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pr-4 pl-11 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin ngân hàng -->
+                <div
+                    class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+                >
+                    <h2
+                        class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950"
+                    >
+                        <CreditCard class="text-brand size-5" /> Thông tin ngân
+                        hàng
+                    </h2>
+                    <div class="grid gap-5 sm:grid-cols-3">
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Tên ngân hàng</label
+                            >
+                            <input
+                                v-model="form.ten_ngan_hang"
+                                type="text"
+                                placeholder="VD: Vietcombank"
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Số tài khoản</label
+                            >
+                            <input
+                                v-model="form.stk_ngan_hang"
+                                type="text"
+                                placeholder="0123456789"
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-stone-700"
+                                >Tên chủ tài khoản</label
+                            >
+                            <input
+                                v-model="form.ten_chu_tk"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="NGUYEN VAN A"
+                                class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đổi mật khẩu -->
+                <div
+                    class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+                >
+                    <div class="mb-5 flex items-center justify-between">
+                        <h2
+                            class="flex items-center gap-2 text-base font-semibold text-stone-950"
+                        >
+                            <Lock class="text-brand size-5" /> Đổi mật khẩu
+                        </h2>
+                        <button
+                            type="button"
+                            @click="isChangingPassword = !isChangingPassword"
+                            class="text-sm font-medium text-stone-600 underline transition hover:text-stone-900"
+                        >
+                            {{
+                                isChangingPassword ? 'Hủy' : 'Thay đổi mật khẩu'
+                            }}
+                        </button>
                     </div>
 
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <!-- Header -->
-                        <div class="flex items-center justify-between">
+                    <div v-if="isChangingPassword">
+                        <p class="mb-5 text-sm text-stone-500">
+                            Nhập mật khẩu cũ và mới để thay đổi.
+                        </p>
+                        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             <div>
-                                <h1 class="text-xl font-bold text-stone-950">Hồ sơ nhà cung cấp</h1>
-                                <p class="text-sm text-stone-500">Quản lý thông tin thương hiệu và tài khoản</p>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Mật khẩu hiện tại</label
+                                >
+                                <input
+                                    v-model="form.current_password"
+                                    type="password"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                                <p
+                                    v-if="form.errors.current_password"
+                                    class="mt-1 text-xs text-red-600"
+                                >
+                                    {{ form.errors.current_password }}
+                                </p>
                             </div>
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-50"
-                            >
-                                <Loader2 v-if="form.processing" class="size-4 animate-spin" />
-                                <Save v-else class="size-4" />
-                                Lưu thay đổi
-                            </button>
-                        </div>
-
-                        <!-- Avatar & Personal Info -->
-                        <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-                            <h2 class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950">
-                                <User class="size-5 text-brand" /> Thông tin cá nhân
-                            </h2>
-                            <div class="flex flex-col gap-6 sm:flex-row">
-                                <!-- Avatar -->
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="relative size-24 overflow-hidden rounded-full bg-stone-100 ring-4 ring-stone-200/50">
-                                        <img
-                                            v-if="avatarPreview"
-                                            :src="avatarPreview"
-                                            class="size-full object-cover"
-                                            referrerpolicy="no-referrer"
-                                        />
-                                        <div v-else class="flex size-full items-center justify-center">
-                                            <User class="size-8 text-stone-300" />
-                                        </div>
-                                    </div>
-                                    <label class="flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50">
-                                        <Upload class="size-3.5" /> Đổi ảnh
-                                        <input type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
-                                    </label>
-                                </div>
-
-                                <!-- Fields -->
-                                <div class="flex-1 grid gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-medium text-stone-700">Họ tên <span class="text-red-500">*</span></label>
-                                        <input v-model="form.ho_ten" type="text" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                        <p v-if="form.errors.ho_ten" class="mt-1 text-xs text-red-600">{{ form.errors.ho_ten }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-medium text-stone-700">Email</label>
-                                        <input :value="user.email" type="email" disabled class="w-full rounded-xl border border-stone-200 bg-stone-100 px-4 py-3 text-sm text-stone-500 outline-none" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm font-medium text-stone-700">Số điện thoại</label>
-                                        <div class="relative">
-                                            <Phone class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                                            <input v-model="form.so_dien_thoai" type="text" placeholder="0912 345 678" class="w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Thông tin thương hiệu -->
-                        <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-                            <h2 class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950">
-                                <Building2 class="size-5 text-brand" /> Thông tin thương hiệu
-                            </h2>
-                            <div class="grid gap-5 sm:grid-cols-2">
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Tên thương hiệu <span class="text-red-500">*</span></label>
-                                    <input v-model="form.ten_thuong_hieu" type="text" placeholder="VD: Dịch Vụ Pro Đà Lạt" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" :class="{ 'border-red-300': form.errors.ten_thuong_hieu }" />
-                                    <p v-if="form.errors.ten_thuong_hieu" class="mt-1 text-xs text-red-600">{{ form.errors.ten_thuong_hieu }}</p>
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Năm kinh nghiệm</label>
-                                    <input v-model="form.nam_kinh_nghiem" type="number" min="0" max="100" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Giới thiệu</label>
-                                    <textarea v-model="form.gioi_thieu" rows="4" placeholder="Mô tả về thương hiệu, lĩnh vực chuyên môn, cam kết chất lượng..." class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Website</label>
-                                    <div class="relative">
-                                        <Globe class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                                        <input v-model="form.website" type="url" placeholder="https://" class="w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Facebook</label>
-                                    <div class="relative">
-                                        <Facebook class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                                        <input v-model="form.facebook" type="text" placeholder="facebook.com/..." class="w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                    </div>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Giấy phép kinh doanh</label>
-                                    <div class="relative">
-                                        <FileText class="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                                        <input v-model="form.giay_phep_kinh_doanh" type="text" placeholder="Số giấy phép hoặc link file" class="w-full rounded-xl border border-stone-200 bg-stone-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Thông tin ngân hàng -->
-                        <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-                            <h2 class="mb-5 flex items-center gap-2 text-base font-semibold text-stone-950">
-                                <CreditCard class="size-5 text-brand" /> Thông tin ngân hàng
-                            </h2>
-                            <div class="grid gap-5 sm:grid-cols-3">
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Tên ngân hàng</label>
-                                    <input v-model="form.ten_ngan_hang" type="text" placeholder="VD: Vietcombank" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Số tài khoản</label>
-                                    <input v-model="form.stk_ngan_hang" type="text" placeholder="0123456789" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Tên chủ tài khoản</label>
-                                    <input v-model="form.ten_chu_tk" type="text" placeholder="NGUYEN VAN A" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Trạng thái xác minh -->
-                        <div v-if="profile" class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-                            <ShieldCheck class="size-5 text-emerald-600" />
                             <div>
-                                <p class="text-sm font-medium text-emerald-800">Tài khoản đã xác minh</p>
-                                <p class="text-xs text-emerald-600">Điểm đánh giá hiện tại: {{ profile.diem_danh_gia }} ★</p>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Mật khẩu mới</label
+                                >
+                                <input
+                                    v-model="form.password"
+                                    type="password"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                                <p
+                                    v-if="form.errors.password"
+                                    class="mt-1 text-xs text-red-600"
+                                >
+                                    {{ form.errors.password }}
+                                </p>
+                            </div>
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-stone-700"
+                                    >Xác nhận mật khẩu</label
+                                >
+                                <input
+                                    v-model="form.password_confirmation"
+                                    type="password"
+                                    class="focus:border-brand focus:ring-brand w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2"
+                                />
+                                <p
+                                    v-if="form.errors.password_confirmation"
+                                    class="mt-1 text-xs text-red-600"
+                                >
+                                    {{ form.errors.password_confirmation }}
+                                </p>
                             </div>
                         </div>
-                    </form>
-            </div>
+                    </div>
+                    <div v-else>
+                        <p class="text-sm text-stone-500 italic">
+                            Nhấn vào "Thay đổi mật khẩu" nếu bạn muốn thay đổi.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Trạng thái xác minh -->
+                <div
+                    v-if="profile"
+                    class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4"
+                >
+                    <ShieldCheck class="size-5 text-emerald-600" />
+                    <div>
+                        <p class="text-sm font-medium text-emerald-800">
+                            Tài khoản đã xác minh
+                        </p>
+                        <p class="text-xs text-emerald-600">
+                            Điểm đánh giá hiện tại:
+                            {{ profile.diem_danh_gia }} ★
+                        </p>
+                    </div>
+                </div>
+            </form>
         </div>
-    </ProviderLayout>
+    </div>
 </template>

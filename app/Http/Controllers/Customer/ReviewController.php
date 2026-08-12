@@ -25,7 +25,7 @@ class ReviewController extends Controller
     /**
      * Show the review form for a completed booking.
      */
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
         $bookingId = $request->query('booking_id');
 

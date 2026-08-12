@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\YeuThich;
 use App\Services\Dashboard\DashboardService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,7 +54,7 @@ class CustomerController extends Controller
     {
         $user = auth()->user();
 
-        $bookings = DonDatLich::with(['dichVu', 'nhaCungCap'])
+        $bookings = DonDatLich::with(['dichVu', 'nhaCungCap', 'danhGia'])
             ->where('khach_hang_id', $user->id)
             ->orderByDesc('created_at')
             ->get()
@@ -61,7 +62,7 @@ class CustomerController extends Controller
                 'id' => $b->id,
                 'code' => $b->ma_don,
                 'service' => $b->dichVu?->ten_dich_vu ?? 'Dịch vụ',
-                'provider' => $b->nhaCungCap?->name ?? 'NCC',
+                'provider' => $this->resolveProviderName($b->nhaCungCap, $b->dichVu),
                 'date' => $b->thoi_gian_thuc_hien?->format('d/m/Y') ?? '',
                 'time' => $b->thoi_gian_thuc_hien?->format('H:i') ?? '',
                 'status' => $b->trang_thai_don,
@@ -69,6 +70,7 @@ class CustomerController extends Controller
                 'price' => (float) $b->tong_tien,
                 'image' => $this->getServiceImage($b->dichVu),
                 'serviceId' => $b->dich_vu_id,
+                'hasReview' => $b->danhGia !== null,
             ]);
 
         return Inertia::render('customer/bookings/Index', [
@@ -85,6 +87,9 @@ class CustomerController extends Controller
 
         $favorites = YeuThich::with(['dichVu.nhaCungCap.hoSoNhaCungCap'])
             ->where('nguoi_dung_id', $user->id)
+            ->whereHas('dichVu', fn ($query) => $query
+                ->where('trang_thai_duyet', 'da_duyet')
+                ->where('trang_thai_hoat_dong', 'hoat_dong'))
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($fav) {
@@ -113,8 +118,18 @@ class CustomerController extends Controller
      */
     public function toggleFavorite(Request $request): \Illuminate\Http\JsonResponse
     {
+        $validated = $request->validate([
+            'dich_vu_id' => [
+                'required',
+                'integer',
+                Rule::exists('dich_vu', 'id')
+                    ->where('trang_thai_duyet', 'da_duyet')
+                    ->where('trang_thai_hoat_dong', 'hoat_dong'),
+            ],
+        ]);
+
         $user = auth()->user();
-        $serviceId = $request->input('dich_vu_id');
+        $serviceId = $validated['dich_vu_id'];
 
         $existing = YeuThich::where('nguoi_dung_id', $user->id)
             ->where('dich_vu_id', $serviceId)

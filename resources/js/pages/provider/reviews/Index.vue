@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     CheckCircle2,
@@ -10,6 +10,7 @@ import {
     Star,
     User,
 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface Review {
@@ -105,8 +106,7 @@ function getStarPercent(star: number): number {
 <template>
     <Head title="Đánh giá nhận được" />
 
-    <ProviderLayout activePage="reviews">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="space-y-6">
                     <!-- Flash -->
                     <div v-if="flash.success" class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -272,5 +272,4 @@ function getStarPercent(star: number): number {
                     </div>
             </div>
         </div>
-    </ProviderLayout>
-</template>
+    </template>

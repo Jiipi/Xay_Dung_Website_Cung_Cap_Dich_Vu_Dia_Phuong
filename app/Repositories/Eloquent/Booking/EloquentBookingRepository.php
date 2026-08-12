@@ -55,9 +55,9 @@ class EloquentBookingRepository implements BookingRepositoryInterface
     public function getStatusCountsForProvider(int $providerId): array
     {
         return DonDatLich::where('nha_cung_cap_id', $providerId)
-            ->selectRaw("trang_thai_don, COUNT(*) as so_luong")
+            ->selectRaw("trang_thai_don, COUNT(*) as tong_so")
             ->groupBy('trang_thai_don')
-            ->pluck('so_luong', 'trang_thai_don')
+            ->pluck('tong_so', 'trang_thai_don')
             ->toArray();
     }
 

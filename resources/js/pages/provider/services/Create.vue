@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ImagePlus, Loader2, Save, Tag, X } from 'lucide-vue-next';
+import { ref } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface Category {
@@ -21,6 +22,7 @@ const form = useForm({
     gia_tu: '' as string | number,
     gia_den: '' as string | number,
     don_vi_gia: 'lượt',
+    thoi_luong_phut: 120,
     dia_chi_hien_thi: '',
     anh_dich_vu: [] as File[],
     the_tu_khoa: [] as string[],
@@ -84,8 +86,7 @@ function submit() {
 <template>
     <Head title="Tạo dịch vụ mới" />
 
-    <ProviderLayout activePage="services">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                     <form @submit.prevent="submit" class="space-y-6">
                         <!-- Header -->
                         <div class="flex items-center justify-between">
@@ -142,6 +143,19 @@ function submit() {
                                         </template>
                                     </select>
                                     <p v-if="form.errors.danh_muc_id" class="mt-1.5 text-xs text-red-600">{{ form.errors.danh_muc_id }}</p>
+                                </div>
+
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Thời lượng (phút) <span class="text-red-500">*</span></label>
+                                    <input
+                                        v-model="form.thoi_luong_phut"
+                                        type="number"
+                                        min="15"
+                                        max="1440"
+                                        step="15"
+                                        class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand"
+                                    />
+                                    <p v-if="form.errors.thoi_luong_phut" class="mt-1.5 text-xs text-red-600">{{ form.errors.thoi_luong_phut }}</p>
                                 </div>
 
                                 <div>
@@ -305,5 +319,4 @@ function submit() {
                         </div>
                     </form>
         </div>
-    </ProviderLayout>
-</template>
+    </template>

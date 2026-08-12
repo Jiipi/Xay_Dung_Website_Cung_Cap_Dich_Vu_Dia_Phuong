@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { CheckCircle2, Clock, Loader2, Save } from 'lucide-vue-next';
+import { computed } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface ScheduleItem {
@@ -34,8 +35,7 @@ function submit() {
 <template>
     <Head title="Lịch làm việc" />
 
-    <ProviderLayout activePage="availability">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="space-y-6">
                     <!-- Flash -->
                     <div v-if="flash.success" class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -124,5 +124,4 @@ function submit() {
                     </form>
             </div>
         </div>
-    </ProviderLayout>
-</template>
+    </template>

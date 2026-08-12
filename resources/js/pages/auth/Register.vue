@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { Form, Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -77,13 +77,50 @@ const strengthClasses = [
                     <InputError :message="errors.email" />
                 </div>
 
+                <div class="grid gap-3">
+                    <Label>Đăng ký với vai trò</Label>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <label class="group flex cursor-pointer gap-3 rounded-2xl border border-stone-200 bg-white p-4 transition hover:border-brand-surface0/60 hover:bg-stone-50 has-checked:border-brand-surface0 has-checked:bg-brand-surface0/10">
+                            <input
+                                type="radio"
+                                name="role"
+                                value="customer"
+                                required
+                                checked
+                                class="mt-1 size-4 accent-brand-surface0"
+                                :tabindex="3"
+                            />
+                            <span class="grid gap-1">
+                                <span class="font-medium text-stone-900">Khách hàng</span>
+                                <span class="text-sm text-stone-500">Tìm kiếm dịch vụ, đặt lịch và theo dõi giao dịch.</span>
+                            </span>
+                        </label>
+
+                        <label class="group flex cursor-pointer gap-3 rounded-2xl border border-stone-200 bg-white p-4 transition hover:border-brand-surface0/60 hover:bg-stone-50 has-checked:border-brand-surface0 has-checked:bg-brand-surface0/10">
+                            <input
+                                type="radio"
+                                name="role"
+                                value="provider"
+                                required
+                                class="mt-1 size-4 accent-brand-surface0"
+                                :tabindex="4"
+                            />
+                            <span class="grid gap-1">
+                                <span class="font-medium text-stone-900">Nhà cung cấp</span>
+                                <span class="text-sm text-stone-500">Đăng dịch vụ, quản lý lịch đặt và hồ sơ kinh doanh.</span>
+                            </span>
+                        </label>
+                    </div>
+                    <InputError :message="errors.role" />
+                </div>
+
                 <div class="grid gap-2">
                     <Label for="password">Mật khẩu</Label>
                     <PasswordInput
                         id="password"
                         required
-                        minlength="8"
-                        :tabindex="3"
+                        minlength="1"
+                        :tabindex="5"
                         autocomplete="new-password"
                         name="password"
                         placeholder="Tạo mật khẩu"
@@ -114,8 +151,8 @@ const strengthClasses = [
                     <PasswordInput
                         id="password_confirmation"
                         required
-                        minlength="8"
-                        :tabindex="4"
+                        minlength="1"
+                        :tabindex="6"
                         autocomplete="new-password"
                         name="password_confirmation"
                         placeholder="Nhập lại mật khẩu"
@@ -126,7 +163,7 @@ const strengthClasses = [
                 <Button
                     type="submit"
                     class="mt-2 w-full"
-                    tabindex="5"
+                    tabindex="7"
                     :disabled="processing"
                     data-test="register-user-button"
                 >
@@ -140,7 +177,7 @@ const strengthClasses = [
                 <TextLink
                     :href="login()"
                     class="underline underline-offset-4"
-                    :tabindex="6"
+                    :tabindex="8"
                     >Đăng nhập</TextLink
                 >
             </div>

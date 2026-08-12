@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed } from 'vue';
+defineOptions({ layout: AdminLayout });
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     ArrowDownRight,
@@ -14,8 +14,9 @@ import {
     Users,
     UserPlus,
 } from 'lucide-vue-next';
-import AdminLayout from '@/layouts/AdminLayout.vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import { useAnimations } from '@/composables/useAnimations';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface KpiCards {
     totalUsers: number;
@@ -306,12 +307,15 @@ function drawDonutChart() {
 }
 
 // ─── Animations ─────────────────────────────────────────────
-const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const { animateHeroEntrance, animateFadeUp, animateParallax } = useAnimations();
+const heroBadge = ref<HTMLElement | null>(null);
 const heroHeadline = ref<HTMLElement | null>(null);
 const heroDesc = ref<HTMLElement | null>(null);
 const heroButtons = ref<HTMLElement | null>(null);
 const heroStats = ref<HTMLElement | null>(null);
-const contentSections = ref<HTMLElement[]>([]);
+
+const heroOrb1 = ref<HTMLElement | null>(null);
+const heroOrb2 = ref<HTMLElement | null>(null);
 
 // ─── Mount ──────────────────────────────────────────────────
 onMounted(async () => {
@@ -329,131 +333,114 @@ onMounted(async () => {
         drawRevenueChart();
         drawDonutChart();
     });
-
-    animateHeroEntrance({
-        headline: heroHeadline,
-        description: heroDesc,
-        searchBar: heroButtons,
-        stats: heroStats,
-    });
-
-    animateStagger('.kpi-container', '.kpi-card');
-    contentSections.value.forEach(el => {
-        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
-    });
 });
+
+animateHeroEntrance({
+    badge: heroBadge,
+    headline: heroHeadline,
+    description: heroDesc,
+    searchBar: heroButtons,
+    stats: heroStats,
+});
+
+animateParallax(heroOrb1, { speed: -0.4 });
+animateParallax(heroOrb2, { speed: 0.3 });
+
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
     <Head title="Admin Dashboard" />
 
-    <AdminLayout activePage="dashboard">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
-            <!-- ═══ Hero / Welcome ═══ -->
-            <div class="admin-hero">
-                <div class="admin-hero__bg" />
-                <div class="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <Sparkles class="size-4 text-sky-300" />
-                            <span class="text-xs font-bold uppercase tracking-[0.2em] text-sky-300/80">Admin Panel</span>
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+            <!-- ══════ Hero Section ══════ -->
+            <section class="hero-section overflow-hidden rounded-[2rem] shadow-xl relative text-white">
+                <div class="hero-bg absolute inset-0 z-0"></div>
+                <!-- NOISE OVERLAY -->
+                <div class="absolute inset-0 z-0 opacity-5 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+
+                <!-- Parallax Drift Orbs -->
+                <div ref="heroOrb1" class="hero-orb absolute -right-20 -top-20 size-[30rem] rounded-full bg-white/10 blur-[80px]"></div>
+                <div ref="heroOrb2" class="hero-orb absolute -bottom-32 -left-20 size-[25rem] rounded-full bg-sky-400/20 blur-[100px]"></div>
+
+                <div class="relative z-10 grid gap-8 px-6 py-12 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
+                    <div class="flex flex-col justify-center">
+                        <div ref="heroBadge" class="hero-el inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
+                            <Sparkles class="size-4" />
+                            Admin Panel
                         </div>
-                        <h1 ref="heroHeadline" class="text-2xl font-black text-white md:text-3xl">
-                            {{ greeting }}, {{ adminName }}!
+                        <h1 ref="heroHeadline" class="hero-el mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
+                            {{ greeting }}, <br><em class="opacity-85 font-serif italic">{{ adminName }}!</em>
                         </h1>
-                        <p ref="heroDesc" class="mt-2 text-sm text-slate-400 max-w-md">
+                        <p ref="heroDesc" class="hero-el mt-4 max-w-2xl text-base leading-7 text-sky-50 sm:text-lg">
                             Hệ thống đang hoạt động ổn định.
                             <template v-if="kpiCards.pendingOrders > 0 || kpiCards.pendingServices > 0">
-                                Có <strong class="text-amber-400">{{ kpiCards.pendingOrders + kpiCards.pendingServices }}</strong> mục cần xử lý.
+                                Hiện có <strong class="text-amber-300 font-semibold">{{ kpiCards.pendingOrders + kpiCards.pendingServices }}</strong> mục cần xử lý.
                             </template>
                         </p>
-                    </div>
-                    <div ref="heroButtons" class="flex gap-3">
-                        <Link
-                            href="/admin/services"
-                            class="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15"
-                        >
-                            <CheckSquare class="size-4" /> Duyệt dịch vụ
-                        </Link>
-                        <Link
-                            href="/admin/users"
-                            class="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15"
-                        >
-                            <Users class="size-4" /> Quản lý users
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ═══ KPI Cards ═══ -->
-            <div ref="heroStats" class="kpi-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-[2rem] border border-stone-200 bg-white shadow-sm overflow-hidden divide-y sm:divide-y-0 sm:divide-x divide-stone-100">
-                <!-- Users -->
-                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
-                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-sky-400/10 blur-3xl transition duration-500 group-hover:bg-sky-400/20"></div>
-                    <div class="relative z-10 mb-3 flex items-center justify-between">
-                        <div class="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-                            <Users class="size-5" />
+                        <div ref="heroButtons" class="hero-el mt-8 flex flex-col gap-3 sm:flex-row">
+                            <Link href="/admin/services" class="btn inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-sky-950 transition hover:bg-stone-100">
+                                <CheckSquare class="size-4" />
+                                Duyệt dịch vụ
+                            </Link>
+                            <Link href="/admin/users" class="btn inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-md px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+                                Quản lý users
+                                <Users class="size-4" />
+                            </Link>
                         </div>
-                        <span class="flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.usersChangePercent >= 0 ? 'text-emerald-500' : 'text-red-500'">
-                            <ArrowUpRight v-if="kpiCards.usersChangePercent >= 0" class="size-3.5" />
-                            <ArrowDownRight v-else class="size-3.5" />
-                            {{ Math.abs(kpiCards.usersChangePercent) }}%
-                        </span>
                     </div>
-                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Tổng người dùng</p>
-                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.totalUsers }}</p>
-                </div>
 
-                <!-- Services -->
-                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
-                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-emerald-400/10 blur-3xl transition duration-500 group-hover:bg-emerald-400/20"></div>
-                    <div class="relative z-10 mb-3 flex items-center justify-between">
-                        <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                            <Package class="size-5" />
+                    <div ref="heroStats" class="hero-el grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                        <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5 relative overflow-hidden group">
+                            <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-sky-400/20 blur-3xl transition duration-500 group-hover:bg-sky-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2 text-sky-100/70">
+                                <Users class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Tổng người dùng</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ animatedValues.totalUsers }}</p>
+                            <span class="relative z-10 mt-2 inline-flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.usersChangePercent >= 0 ? 'text-emerald-300' : 'text-red-300'">
+                                <ArrowUpRight v-if="kpiCards.usersChangePercent >= 0" class="size-3.5" />
+                                <ArrowDownRight v-else class="size-3.5" />
+                                {{ Math.abs(kpiCards.usersChangePercent) }}%
+                            </span>
                         </div>
-                        <span v-if="kpiCards.pendingServices > 0" class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-600 ring-1 ring-amber-500/20">
-                            {{ kpiCards.pendingServices }} chờ duyệt
-                        </span>
-                    </div>
-                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Tổng dịch vụ</p>
-                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.totalServices }}</p>
-                </div>
-
-                <!-- Revenue -->
-                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
-                    <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-violet-400/10 blur-3xl transition duration-500 group-hover:bg-violet-400/20"></div>
-                    <div class="relative z-10 mb-3 flex items-center justify-between">
-                        <div class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                            <DollarSign class="size-5" />
+                        <div class="border-b border-white/10 p-5 sm:p-6 transition hover:bg-white/5 relative overflow-hidden group">
+                            <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-emerald-400/20 blur-3xl transition duration-500 group-hover:bg-emerald-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2 text-sky-100/70">
+                                <Package class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Tổng dịch vụ</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ animatedValues.totalServices }}</p>
+                            <p v-if="kpiCards.pendingServices > 0" class="relative z-10 mt-2 text-xs font-semibold text-amber-300">{{ kpiCards.pendingServices }} chờ duyệt</p>
+                            <p v-else class="relative z-10 mt-2 text-xs text-sky-200/70">Đã duyệt hết</p>
                         </div>
-                        <span class="flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.revenueChangePercent >= 0 ? 'text-emerald-500' : 'text-red-500'">
-                            <TrendingUp class="size-3.5" />
-                            {{ kpiCards.revenueChangePercent >= 0 ? '+' : '' }}{{ kpiCards.revenueChangePercent }}%
-                        </span>
-                    </div>
-                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">Doanh thu</p>
-                    <p class="relative z-10 mt-2 font-serif text-3xl sm:text-4xl text-stone-900">{{ formatVND(animatedValues.totalRevenue) }}</p>
-                </div>
-
-                <!-- Pending -->
-                <div class="kpi-card p-6 transition hover:bg-stone-50 group relative overflow-hidden">
-                    <div v-if="kpiCards.pendingOrders > 0" class="absolute -bottom-10 -right-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
-                    <div class="relative z-10 mb-3 flex items-center justify-between">
-                        <div class="flex size-10 items-center justify-center rounded-xl" :class="kpiCards.pendingOrders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'">
-                            <Clock class="size-5" />
+                        <div class="border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5 relative overflow-hidden group">
+                            <div class="absolute -bottom-10 -right-10 size-32 rounded-full bg-violet-400/20 blur-3xl transition duration-500 group-hover:bg-violet-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2 text-sky-100/70">
+                                <DollarSign class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Doanh thu</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ formatVND(animatedValues.totalRevenue) }}</p>
+                            <span class="relative z-10 mt-2 inline-flex items-center gap-0.5 text-xs font-semibold" :class="kpiCards.revenueChangePercent >= 0 ? 'text-emerald-300' : 'text-red-300'">
+                                <ArrowUpRight v-if="kpiCards.revenueChangePercent >= 0" class="size-3.5" />
+                                <ArrowDownRight v-else class="size-3.5" />
+                                {{ Math.abs(kpiCards.revenueChangePercent) }}%
+                            </span>
                         </div>
-                        <span v-if="kpiCards.pendingOrders > 0" class="relative flex size-3">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                            <span class="relative inline-flex size-3 rounded-full bg-amber-500"></span>
-                        </span>
+                        <div class="p-5 sm:p-6 transition hover:bg-white/5 relative overflow-hidden group">
+                            <div v-if="kpiCards.pendingOrders > 0" class="absolute -bottom-10 -left-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
+                            <div class="relative z-10 flex items-center gap-2" :class="kpiCards.pendingOrders > 0 ? 'text-amber-300' : 'text-sky-100/70'">
+                                <Clock class="size-4" />
+                                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Chờ phê duyệt</p>
+                            </div>
+                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ animatedValues.pendingOrders }}</p>
+                        </div>
                     </div>
-                    <p class="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em]" :class="kpiCards.pendingOrders > 0 ? 'text-amber-600' : 'text-stone-500'">Chờ phê duyệt</p>
-                    <p class="relative z-10 mt-2 font-serif text-4xl text-stone-900">{{ animatedValues.pendingOrders }}</p>
                 </div>
-            </div>
+            </section>
 
             <!-- ═══ Charts Row ═══ -->
-            <div ref="contentSections" class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div class="animate-fade-up grid grid-cols-1 gap-6 lg:grid-cols-5">
                 <!-- Revenue Chart -->
                 <div class="admin-card lg:col-span-3">
                     <div class="admin-card__header">
@@ -502,7 +489,7 @@ onMounted(async () => {
             </div>
 
             <!-- ═══ Order Status + Recent Orders ═══ -->
-            <div ref="contentSections" class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div class="animate-fade-up grid grid-cols-1 gap-6 lg:grid-cols-5">
                 <!-- Order Status Bars -->
                 <div class="admin-card lg:col-span-2">
                     <div class="admin-card__header">
@@ -577,7 +564,7 @@ onMounted(async () => {
             </div>
 
             <!-- ═══ Recent Users ═══ -->
-            <div ref="contentSections" class="admin-card">
+            <div class="animate-fade-up admin-card">
                 <div class="admin-card__header">
                     <div class="flex items-center gap-3">
                         <div class="rounded-lg bg-sky-500/10 p-2">
@@ -635,25 +622,19 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
-    </AdminLayout>
-</template>
+    </template>
 
 <style scoped>
 /* Hero Section */
-.admin-hero {
-    position: relative;
-    padding: 2rem 2.5rem;
-    border-radius: 2rem;
-    overflow: hidden;
+.hero-section {
+    min-height: 40vh;
 }
-.admin-hero__bg {
-    position: absolute;
-    inset: 0;
+.hero-bg {
     background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 40%, #1e1b4b 70%, #0f172a 100%);
     border: 1px solid rgba(56, 189, 248, 0.1);
     border-radius: inherit;
 }
-.admin-hero__bg::before {
+.hero-bg::before {
     content: '';
     position: absolute;
     top: -50%;
@@ -663,14 +644,10 @@ onMounted(async () => {
     background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 60%);
 }
 
-@keyframes ping {
-    75%, 100% { transform: scale(2); opacity: 0; }
-}
-
 /* Cards */
 .admin-card {
     overflow: hidden;
-    border-radius: 1.5rem;
+    border-radius: 2rem;
     border: 1px solid var(--dl-warm-border, #e7e5e4);
     background: white;
     transition: border-color 0.3s ease;
@@ -709,6 +686,37 @@ onMounted(async () => {
 .admin-card :deep(.text-white) {
     color: #1c1917;
 }
+
+.hero-el {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* === Hero Orbs Drift (CSS — always running, parallax via GSAP) === */
+.hero-orb {
+    animation: drift 10s ease-in-out infinite;
+    will-change: transform;
+}
+.hero-orb:last-of-type {
+    animation-direction: reverse;
+    animation-duration: 12s;
+}
+@keyframes drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(18px, -14px, 0) scale(1.05); }
+}
+
+/* === Initial State for GSAP Animations === */
+.kpi-card, .animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-el, .hero-orb, .kpi-card, .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
 </style>
-
-

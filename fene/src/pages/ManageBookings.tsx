@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   CheckCircle,
   XCircle,
@@ -16,6 +14,8 @@ import {
   LogOut,
   Star,
 } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ManageBookings() {
   const [bookings, setBookings] = useState([

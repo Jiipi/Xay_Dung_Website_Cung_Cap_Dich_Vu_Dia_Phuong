@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Eye, ImagePlus, Loader2, Save, Tag, X } from 'lucide-vue-next';
+import { ref } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface Category {
@@ -18,6 +19,7 @@ interface ServiceData {
     gia_tu: number;
     gia_den: number;
     don_vi_gia: string | null;
+    thoi_luong_phut: number | null;
     dia_chi_hien_thi: string | null;
     danh_sach_anh: string[];
     the_tu_khoa: string[];
@@ -39,6 +41,7 @@ const form = useForm({
     gia_tu: props.service.gia_tu || '',
     gia_den: props.service.gia_den || '',
     don_vi_gia: props.service.don_vi_gia ?? 'lượt',
+    thoi_luong_phut: props.service.thoi_luong_phut ?? 120,
     dia_chi_hien_thi: props.service.dia_chi_hien_thi ?? '',
     trang_thai_hoat_dong: props.service.trang_thai_hoat_dong,
     anh_dich_vu: [] as File[],
@@ -116,8 +119,7 @@ function submit() {
 <template>
     <Head :title="`Sửa: ${service.ten_dich_vu}`" />
 
-    <ProviderLayout activePage="services">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                     <form @submit.prevent="submit" class="space-y-6">
                         <!-- Header -->
                         <div class="flex items-center justify-between">
@@ -199,6 +201,12 @@ function submit() {
                                         <option value="hoat_dong">Hoạt động</option>
                                         <option value="tam_ngung">Tạm ngưng</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-stone-700">Thời lượng (phút) <span class="text-red-500">*</span></label>
+                                    <input v-model="form.thoi_luong_phut" type="number" min="15" max="1440" step="15" class="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand" />
+                                    <p v-if="form.errors.thoi_luong_phut" class="mt-1.5 text-xs text-red-600">{{ form.errors.thoi_luong_phut }}</p>
                                 </div>
 
                                 <div>
@@ -315,5 +323,4 @@ function submit() {
                         </div>
                     </form>
         </div>
-    </ProviderLayout>
-</template>
+    </template>

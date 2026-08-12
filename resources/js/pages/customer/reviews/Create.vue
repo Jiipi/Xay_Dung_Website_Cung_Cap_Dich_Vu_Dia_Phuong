@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+defineOptions({ layout: CustomerLayout });
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, Star, Send } from 'lucide-vue-next';
-import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
 const props = withDefaults(
     defineProps<{ booking?: any }>(),
@@ -45,8 +46,7 @@ const ratingLabels = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Tuy
 <template>
     <Head title="Đánh giá dịch vụ" />
 
-    <CustomerLayout activePage="bookings">
-        <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
             <Link href="/customer/bookings" class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-stone-500 transition hover:text-stone-700">
                 <ArrowLeft class="size-4" /> Quay lại
             </Link>
@@ -124,5 +124,4 @@ const ratingLabels = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Tuy
                 </form>
             </div>
         </div>
-    </CustomerLayout>
-</template>
+    </template>

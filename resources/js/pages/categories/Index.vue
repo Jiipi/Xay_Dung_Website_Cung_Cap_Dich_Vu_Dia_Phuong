@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -23,6 +22,7 @@ import {
     Wrench,
     Zap,
 } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
 
 /* ── Props from controller ── */

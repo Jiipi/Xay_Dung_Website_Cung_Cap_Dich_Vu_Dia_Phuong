@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Filter, Heart, MapPin, Search, SearchX, Star } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
 
 const props = withDefaults(

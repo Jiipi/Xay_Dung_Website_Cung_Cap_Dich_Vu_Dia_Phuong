@@ -20,6 +20,7 @@ class ServiceUpdateRequest extends FormRequest
             'gia_tu' => 'nullable|numeric|min:0',
             'gia_den' => 'nullable|numeric|min:0|gte:gia_tu',
             'don_vi_gia' => 'nullable|string|max:50',
+            'thoi_luong_phut' => 'required|integer|min:15|max:1440',
             'dia_chi_hien_thi' => 'nullable|string|max:500',
             'trang_thai_hoat_dong' => 'nullable|string|in:hoat_dong,tam_ngung',
             'anh_dich_vu' => 'nullable|array|max:10',

@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Calendar,
   Clock,
@@ -10,6 +8,8 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState("bookings");

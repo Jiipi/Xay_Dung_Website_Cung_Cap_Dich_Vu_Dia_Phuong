@@ -70,6 +70,7 @@ class DashboardService
             ->values();
 
         $recommendedQuery = DichVu::with(['danhMuc', 'nhaCungCap.hoSoNhaCungCap'])
+            ->where('trang_thai_duyet', 'da_duyet')
             ->where('trang_thai_hoat_dong', 'hoat_dong');
 
         if ($interestCategoryIds->isNotEmpty()) {
@@ -88,6 +89,7 @@ class DashboardService
 
         if ($recommendedServices->isEmpty()) {
             $recommendedServices = DichVu::with(['danhMuc', 'nhaCungCap.hoSoNhaCungCap'])
+                ->where('trang_thai_duyet', 'da_duyet')
                 ->where('trang_thai_hoat_dong', 'hoat_dong')
                 ->when($favoriteServiceIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $favoriteServiceIds))
                 ->orderByDesc('do_uu_tien')
@@ -97,7 +99,15 @@ class DashboardService
         }
 
         return [
-            'stats' => compact('totalBookings', 'completedBookings', 'pendingBookings', 'upcomingBookingsCount', 'reviewPendingCount', 'totalFavorites', 'unreadNotifications'),
+            'stats' => [
+                'totalBookings' => $totalBookings,
+                'completedBookings' => $completedBookings,
+                'pendingBookings' => $pendingBookings,
+                'upcomingBookings' => $upcomingBookingsCount,
+                'reviewPendingCount' => $reviewPendingCount,
+                'totalFavorites' => $totalFavorites,
+                'unreadNotifications' => $unreadNotifications,
+            ],
             'recentBookings' => $recentBookings,
             'upcomingBookings' => $upcomingBookings,
             'recommendedServices' => $recommendedServices,

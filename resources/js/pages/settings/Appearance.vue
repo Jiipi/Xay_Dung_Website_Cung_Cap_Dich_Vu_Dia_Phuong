@@ -1,9 +1,24 @@
+<script lang="ts">
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import ProviderLayout from '@/layouts/ProviderLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import { defineComponent, h } from 'vue';
+
+export default defineComponent({
+    layout: (createElement, page) => {
+        const role = page.props.auth?.role;
+        let LayoutComponent = CustomerLayout;
+        if (role === 'Admin') LayoutComponent = AdminLayout;
+        else if (role === 'Nhà cung cấp') LayoutComponent = ProviderLayout;
+        return createElement(LayoutComponent, () => page);
+    }
+});
+</script>
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Heading from '@/components/Heading.vue';
-import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/appearance';
 import type { BreadcrumbItem } from '@/types';
@@ -16,17 +31,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const page = usePage();
-const layoutRole = computed(() => {
-    const role = page.props.auth?.role;
-    if (role === 'Admin') return 'admin';
-    if (role === 'Nhà cung cấp') return 'provider';
-    return 'customer';
-});
 </script>
 
 <template>
-    <MarketplaceLayout :role="layoutRole">
-        <Head title="Appearance settings" />
+            <Head title="Appearance settings" />
 
         <h1 class="sr-only">Appearance settings</h1>
 
@@ -40,5 +48,4 @@ const layoutRole = computed(() => {
                 <AppearanceTabs />
             </div>
         </SettingsLayout>
-    </MarketplaceLayout>
-</template>
+    </template>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+defineOptions({ layout: AdminLayout });
+import { Head, Link, router } from '@inertiajs/vue3';
+import debounce from '@/lib/debounce';
 import {
-    CalendarDays, Search, CheckCircle, XCircle, AlertCircle, Eye, ClipboardCheck, ChevronLeft, ChevronRight, X
+    CalendarDays, Search, CheckCircle, XCircle, AlertCircle, ClipboardCheck, ChevronRight, Sparkles
 } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import { useAnimations } from '@/composables/useAnimations';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import debounce from 'lodash/debounce';
 
 const props = defineProps<{
     bookings: any;
@@ -44,13 +46,13 @@ const statusOptions = [
 
 function statusColor(status: string) {
     const map: Record<string, string> = {
-        cho_xac_nhan: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-        da_xac_nhan: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        dang_thuc_hien: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-        hoan_thanh: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-        da_huy: 'bg-red-500/10 text-red-400 border-red-500/20',
+        cho_xac_nhan: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+        da_xac_nhan: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+        dang_thuc_hien: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200',
+        hoan_thanh: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+        da_huy: 'bg-red-50 text-red-700 ring-1 ring-red-200',
     };
-    return map[status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    return map[status] || 'bg-stone-50 text-stone-600 ring-1 ring-stone-200';
 }
 
 function statusLabel(status: string) {
@@ -86,39 +88,53 @@ function executeAction() {
         });
     }
 }
+
+// Animations
+const { animateFadeUp } = useAnimations();
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
     <Head title="Quản lý Booking - Admin" />
 
-    <AdminLayout activePage="bookings">
-        <div class="mx-auto max-w-7xl p-4 lg:p-8">
-            <div class="mb-8 sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-white">Quản lý Booking</h1>
-                    <p class="mt-2 text-sm text-slate-400">Giám sát và can thiệp đơn đặt lịch trên hệ thống.</p>
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <!-- Header Card -->
+            <div class="animate-fade-up overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-4 border-b border-stone-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Quản lý</p>
+                        <h1 class="mt-1 text-2xl font-black tracking-tight text-stone-950">Đơn hàng (Booking)</h1>
+                        <p class="mt-1 text-sm text-stone-500">Giám sát và can thiệp đơn đặt lịch trên hệ thống.</p>
+                    </div>
+                    <div class="relative">
+                        <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Tìm mã đơn, tên..."
+                            class="w-60 rounded-xl border border-stone-200 bg-stone-50 py-2.5 pl-9 pr-3 text-sm outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+                        />
+                    </div>
                 </div>
-            </div>
 
-            <!-- Stats/Filters -->
-            <div class="mb-6 grid gap-4 lg:grid-cols-4">
-                <div class="col-span-1 lg:col-span-3 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/50 p-1 flex items-center gap-1">
+                <!-- Status Tabs -->
+                <div class="flex flex-wrap items-center gap-2 border-b border-stone-100 bg-stone-50/70 px-6 py-3">
                     <button
                         v-for="opt in statusOptions"
                         :key="opt.key"
                         @click="filterByStatus(opt.key)"
                         :class="[
-                            'whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition',
+                            'whitespace-nowrap rounded-xl border px-4 py-2 text-sm font-medium transition',
                             currentStatus === opt.key
-                                ? 'bg-sky-500 text-white shadow-sm'
-                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                                ? 'border-sky-500 bg-sky-50 text-sky-700 shadow-sm'
+                                : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:text-stone-800'
                         ]"
                     >
                         {{ opt.label }}
                         <span
                             :class="[
-                                'ml-2 rounded-full px-2 py-0.5 text-xs',
-                                currentStatus === opt.key ? 'bg-sky-400/20 text-sky-100' : 'bg-slate-800 text-slate-500'
+                                'ml-1.5 rounded-full px-2 py-0.5 text-[10px]',
+                                currentStatus === opt.key ? 'bg-sky-100 text-sky-600' : 'bg-stone-100 text-stone-500'
                             ]"
                         >
                             {{ statusCounts[opt.key] || 0 }}
@@ -126,144 +142,108 @@ function executeAction() {
                     </button>
                 </div>
 
-                <div class="relative col-span-1">
-                    <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Tìm mã đơn, tên..."
-                        class="w-full rounded-xl border border-slate-800 bg-slate-900/50 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                    />
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl overflow-hidden">
+                <!-- Table -->
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="border-b border-slate-800 bg-slate-800/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4">Mã đơn</th>
-                                <th class="px-6 py-4">Khách hàng</th>
-                                <th class="px-6 py-4">Nhà cung cấp</th>
-                                <th class="px-6 py-4">Dịch vụ</th>
-                                <th class="px-6 py-4">Thời gian</th>
-                                <th class="px-6 py-4 text-right">Tổng tiền</th>
-                                <th class="px-6 py-4">Trạng thái</th>
-                                <th class="px-6 py-4 text-right">Hành động</th>
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-stone-100 text-xs font-medium uppercase tracking-[0.16em] text-stone-400">
+                                <th class="px-6 py-3.5">Mã đơn</th>
+                                <th class="px-6 py-3.5">Khách hàng</th>
+                                <th class="px-6 py-3.5">Nhà cung cấp</th>
+                                <th class="px-6 py-3.5">Dịch vụ</th>
+                                <th class="px-6 py-3.5">Thời gian</th>
+                                <th class="px-6 py-3.5 text-right">Tổng tiền</th>
+                                <th class="px-6 py-3.5">Trạng thái</th>
+                                <th class="px-6 py-3.5 text-right">Hành động</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/50">
-                            <tr v-for="b in bookings.data" :key="b.id" class="transition hover:bg-slate-800/30">
-                                <td class="px-6 py-4 font-mono text-sky-400 font-medium">{{ b.ma_don }}</td>
-                                <td class="px-6 py-4">{{ b.khach_hang }}</td>
-                                <td class="px-6 py-4">{{ b.nha_cung_cap }}</td>
-                                <td class="px-6 py-4 text-slate-200">{{ b.dich_vu }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                        <tbody>
+                            <tr v-for="b in bookings.data" :key="b.id" class="border-b border-stone-50 transition-colors hover:bg-stone-50/80">
+                                <td class="px-6 py-4 font-mono text-sky-600 font-medium">{{ b.ma_don }}</td>
+                                <td class="px-6 py-4 text-stone-700">{{ b.khach_hang }}</td>
+                                <td class="px-6 py-4 text-stone-600">{{ b.nha_cung_cap }}</td>
+                                <td class="px-6 py-4 font-medium text-stone-950">{{ b.dich_vu }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-stone-500">
                                     <div class="flex items-center gap-2">
-                                        <CalendarDays class="size-4 text-slate-500" />
+                                        <CalendarDays class="size-4 text-stone-400" />
                                         {{ b.thoi_gian_thuc_hien }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-right font-medium">{{ b.tong_tien.toLocaleString('vi-VN') }}đ</td>
+                                <td class="px-6 py-4 text-right font-semibold text-stone-800">{{ b.tong_tien.toLocaleString('vi-VN') }}đ</td>
                                 <td class="px-6 py-4">
-                                    <span :class="['inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium', statusColor(b.trang_thai)]">
+                                    <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', statusColor(b.trang_thai)]">
                                         {{ statusLabel(b.trang_thai) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <!-- Actions depend on status -->
-                                        <button v-if="b.trang_thai === 'cho_xac_nhan'" @click="confirmAction(b, 'confirm')" title="Ép xác nhận" class="rounded p-1.5 text-slate-400 transition hover:bg-blue-500/20 hover:text-blue-400">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button v-if="b.trang_thai === 'cho_xac_nhan'" @click="confirmAction(b, 'confirm')" title="Ép xác nhận" class="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-2 text-stone-500 transition-colors hover:bg-blue-50 hover:text-blue-600">
                                             <CheckCircle class="size-4" />
                                         </button>
-                                        <button v-if="b.trang_thai === 'da_xac_nhan'" @click="confirmAction(b, 'complete')" title="Ép hoàn thành" class="rounded p-1.5 text-slate-400 transition hover:bg-emerald-500/20 hover:text-emerald-400">
+                                        <button v-if="b.trang_thai === 'da_xac_nhan'" @click="confirmAction(b, 'complete')" title="Ép hoàn thành" class="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-2 text-stone-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600">
                                             <ClipboardCheck class="size-4" />
                                         </button>
-                                        <button v-if="['cho_xac_nhan', 'da_xac_nhan'].includes(b.trang_thai)" @click="confirmAction(b, 'reject')" title="Hủy đơn" class="rounded p-1.5 text-slate-400 transition hover:bg-red-500/20 hover:text-red-400">
+                                        <button v-if="['cho_xac_nhan', 'da_xac_nhan'].includes(b.trang_thai)" @click="confirmAction(b, 'reject')" title="Hủy đơn" class="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600">
                                             <XCircle class="size-4" />
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="bookings.data.length === 0">
-                                <td colspan="8" class="px-6 py-12 text-center text-slate-500">
-                                    Không tìm thấy đơn hàng nào.
-                                </td>
+                                <td colspan="8" class="px-6 py-16 text-center text-sm text-stone-400">Không tìm thấy đơn hàng nào.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="bookings.last_page > 1" class="border-t border-slate-800 p-4">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm text-slate-400">
-                            Hiển thị <span class="font-medium text-slate-200">{{ bookings.from }}</span> đến <span class="font-medium text-slate-200">{{ bookings.to }}</span> trong tổng số <span class="font-medium text-slate-200">{{ bookings.total }}</span> kết quả
-                        </p>
-                        <div class="flex items-center gap-2">
-                            <Link
-                                v-if="bookings.prev_page_url"
-                                :href="bookings.prev_page_url"
-                                class="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700"
-                            >
-                                <ChevronLeft class="size-4" />
-                            </Link>
-                            <span v-else class="inline-flex items-center justify-center rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-600 opacity-50">
-                                <ChevronLeft class="size-4" />
-                            </span>
-
-                            <Link
-                                v-if="bookings.next_page_url"
-                                :href="bookings.next_page_url"
-                                class="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700"
-                            >
-                                <ChevronRight class="size-4" />
-                            </Link>
-                            <span v-else class="inline-flex items-center justify-center rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-600 opacity-50">
-                                <ChevronRight class="size-4" />
-                            </span>
-                        </div>
+                <div v-if="bookings.last_page > 1" class="flex items-center justify-between border-t border-stone-100 px-6 py-4">
+                    <p class="text-xs text-stone-500">
+                        Hiển thị {{ bookings.from }} — {{ bookings.to }} / {{ bookings.total }} kết quả
+                    </p>
+                    <div class="flex gap-1">
+                        <Link
+                            v-if="bookings.prev_page_url"
+                            :href="bookings.prev_page_url"
+                            class="rounded-lg px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100"
+                            preserve-state
+                        >Trước</Link>
+                        <Link
+                            v-if="bookings.next_page_url"
+                            :href="bookings.next_page_url"
+                            class="rounded-lg px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100"
+                            preserve-state
+                        >Tiếp</Link>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Action Modal -->
-        <Transition
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="opacity-0 scale-95"
-            enter-to-class="opacity-100 scale-100"
-            leave-active-class="transition duration-150 ease-in"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-95"
-        >
-            <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" @click="showModal = false"></div>
-                <div class="relative w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-                    <div class="flex items-start gap-4">
+        <Teleport to="body">
+            <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div class="mx-4 w-full max-w-md rounded-[2rem] bg-white p-6 shadow-xl">
+                    <div class="mb-4 flex items-center gap-3">
                         <div :class="[
-                            'flex size-10 shrink-0 items-center justify-center rounded-full',
-                            modalAction === 'confirm' ? 'bg-blue-500/20 text-blue-400' :
-                            modalAction === 'complete' ? 'bg-emerald-500/20 text-emerald-400' :
-                            'bg-red-500/20 text-red-400'
+                            'rounded-full p-2.5',
+                            modalAction === 'confirm' ? 'bg-blue-50 text-blue-600' :
+                            modalAction === 'complete' ? 'bg-emerald-50 text-emerald-600' :
+                            'bg-red-50 text-red-600'
                         ]">
                             <AlertCircle class="size-5" />
                         </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-white">
-                                <span v-if="modalAction === 'confirm'">Ép xác nhận đơn hàng?</span>
-                                <span v-if="modalAction === 'complete'">Ép hoàn thành đơn hàng?</span>
-                                <span v-if="modalAction === 'reject'">Hủy bỏ đơn hàng?</span>
-                            </h3>
-                            <p class="mt-2 text-sm text-slate-400">
-                                Bạn đang can thiệp vào đơn hàng <span class="font-mono text-slate-200">{{ selectedBooking?.ma_don }}</span> của khách hàng <span class="text-slate-200">{{ selectedBooking?.khach_hang }}</span>.
-                                Hành động này sẽ được ghi nhận lại và thông báo cho cả 2 bên.
-                            </p>
-                        </div>
+                        <h3 class="text-lg font-bold text-stone-950">
+                            <span v-if="modalAction === 'confirm'">Ép xác nhận đơn hàng?</span>
+                            <span v-if="modalAction === 'complete'">Ép hoàn thành đơn hàng?</span>
+                            <span v-if="modalAction === 'reject'">Hủy bỏ đơn hàng?</span>
+                        </h3>
                     </div>
+                    <p class="text-sm text-stone-600">
+                        Bạn đang can thiệp vào đơn hàng <span class="font-mono font-semibold text-stone-900">{{ selectedBooking?.ma_don }}</span> của khách hàng <span class="font-semibold text-stone-900">{{ selectedBooking?.khach_hang }}</span>.
+                        Hành động này sẽ được ghi nhận lại và thông báo cho cả 2 bên.
+                    </p>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button @click="showModal = false" class="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">Hủy bỏ</button>
+                        <button @click="showModal = false" class="rounded-xl border border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50">Hủy bỏ</button>
                         <button
                             @click="executeAction"
                             :class="[
@@ -278,6 +258,19 @@ function executeAction() {
                     </div>
                 </div>
             </div>
-        </Transition>
-    </AdminLayout>
-</template>
+        </Teleport>
+    </template>
+
+<style scoped>
+.animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+}
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+</style>

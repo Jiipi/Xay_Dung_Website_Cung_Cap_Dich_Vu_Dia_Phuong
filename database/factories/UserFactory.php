@@ -24,8 +24,13 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $names = [
+            'Nguyễn Minh Anh', 'Trần Quốc Bảo', 'Lê Thanh Hà', 'Phạm Gia Huy', 'Võ Thùy Linh',
+            'Đặng Hoàng Nam', 'Bùi Khánh Ngọc', 'Huỳnh Nhật Minh', 'Đỗ Phương Thảo', 'Ngô Tuấn Kiệt',
+        ];
+
         return [
-            'ho_ten' => fake()->name(),
+            'ho_ten' => fake()->randomElement($names),
             'email' => fake()->unique()->safeEmail(),
             'so_dien_thoai' => fake()->boolean(70) ? fake()->unique()->numerify('0#########') : null,
             'email_da_xac_minh' => now(),

@@ -9,10 +9,11 @@
  *   // lenis.value gives you the Lenis instance if needed
  */
 
-import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { onMounted, onUnmounted, shallowRef, type ShallowRef } from 'vue';
+import Lenis from 'lenis';
+import { onMounted, onUnmounted, shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 
 // Register plugin
 if (typeof window !== 'undefined') {
@@ -22,6 +23,7 @@ if (typeof window !== 'undefined') {
 // Singleton: only one Lenis instance across the app
 let lenisInstance: Lenis | null = null;
 let refCount = 0;
+let tickerCallback: ((time: number) => void) | null = null;
 
 export function useSmoothScroll(): {
     lenis: ShallowRef<Lenis | null>;
@@ -41,12 +43,32 @@ export function useSmoothScroll(): {
 
         refCount++;
 
+        const shouldUseLenis =
+            window.matchMedia('(pointer: fine)').matches &&
+            !window.matchMedia('(max-width: 768px)').matches;
+
+        if (!shouldUseLenis) {
+            ScrollTrigger.refresh();
+            return;
+        }
+
         if (!lenisInstance) {
             lenisInstance = new Lenis({
-                duration: 1.2,
-                easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                duration: 0.65,
+                easing: (t: number) =>
+                    Math.min(1, 1.001 - Math.pow(2, -10 * t)),
                 smoothWheel: true,
+                syncTouch: false,
+                wheelMultiplier: 0.9,
                 touchMultiplier: 1.5,
+                prevent: (node: Element | null) => {
+                    if (!node) return false;
+                    return Boolean(
+                        node.closest(
+                            '[data-lenis-prevent], .overflow-y-auto, .overflow-auto',
+                        ),
+                    );
+                },
             });
 
             // ─── Critical: Sync Lenis → GSAP ScrollTrigger ─────────
@@ -54,9 +76,10 @@ export function useSmoothScroll(): {
             lenisInstance.on('scroll', ScrollTrigger.update);
 
             // Use GSAP ticker for raf (single rAF loop = better perf)
-            gsap.ticker.add((time: number) => {
+            tickerCallback = (time: number) => {
                 lenisInstance?.raf(time * 1000);
-            });
+            };
+            gsap.ticker.add(tickerCallback);
 
             // Disable GSAP's built-in lag smoothing (conflicts with Lenis)
             gsap.ticker.lagSmoothing(0);
@@ -72,6 +95,10 @@ export function useSmoothScroll(): {
 
         // Only destroy when last consumer unmounts
         if (refCount <= 0 && lenisInstance) {
+            if (tickerCallback) {
+                gsap.ticker.remove(tickerCallback);
+                tickerCallback = null;
+            }
             lenisInstance.destroy();
             lenisInstance = null;
             refCount = 0;

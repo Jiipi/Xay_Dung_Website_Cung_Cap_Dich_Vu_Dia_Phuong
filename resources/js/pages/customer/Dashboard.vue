@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ layout: CustomerLayout });
 import { Head, Link, usePage, Deferred } from '@inertiajs/vue3';
 import {
     ArrowRight,
@@ -16,12 +17,13 @@ import {
     Sparkles,
     Star,
     User,
-    XCircle,
+    XCircle
 } from 'lucide-vue-next';
 import { computed, onMounted, ref, nextTick } from 'vue';
-import CustomerLayout from '@/layouts/CustomerLayout.vue';
+import AnimatedCounter from '@/components/ui/AnimatedCounter.vue';
 import AppSkeleton from '@/components/ui/AppSkeleton.vue';
 import { useAnimations } from '@/composables/useAnimations';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
 type Stats = { totalBookings: number; completedBookings: number; pendingBookings: number; upcomingBookings: number; reviewPendingCount: number; totalFavorites: number; unreadNotifications: number };
 type Booking = { id: number; code: string; service: string; provider: string; date: string; time: string; status: string; statusLabel: string; price: number; image: string; hasReview: boolean };
@@ -92,53 +94,56 @@ const profileChecks = computed(() => [
 ]);
 
 // ─── Animations ─────────────────────────────────────────────
-const { animateHeroEntrance, animateStagger, animateFadeUp } = useAnimations();
+const { animateHeroEntrance, animateStagger, animateFadeUp, animateParallax } = useAnimations();
 const heroBadge = ref<HTMLElement | null>(null);
 const heroHeadline = ref<HTMLElement | null>(null);
 const heroDesc = ref<HTMLElement | null>(null);
 const heroButtons = ref<HTMLElement | null>(null);
 const heroStats = ref<HTMLElement | null>(null);
-const contentSections = ref<HTMLElement[]>([]);
 
-onMounted(async () => {
-    await nextTick();
-    animateHeroEntrance({
-        badge: heroBadge,
-        headline: heroHeadline,
-        description: heroDesc,
-        searchBar: heroButtons,
-        stats: heroStats,
-    });
-    
-    animateStagger('.action-grid', '.action-card');
-    animateStagger('.quick-links', '.quick-link');
-    contentSections.value.forEach(el => {
-        if(el) animateFadeUp(el, { duration: 0.6, y: 40 });
-    });
+const heroOrb1 = ref<HTMLElement | null>(null);
+const heroOrb2 = ref<HTMLElement | null>(null);
+
+animateHeroEntrance({
+    badge: heroBadge,
+    headline: heroHeadline,
+    description: heroDesc,
+    searchBar: heroButtons,
+    stats: heroStats,
 });
+
+animateParallax(heroOrb1, { speed: -0.4 });
+animateParallax(heroOrb2, { speed: 0.3 });
+
+animateStagger('.action-grid', '.action-card');
+animateStagger('.quick-links', '.quick-link');
+animateFadeUp('.animate-fade-up', { duration: 0.6, y: 40 });
 </script>
 
 <template>
     <Head title="Trang chủ khách hàng" />
 
-    <CustomerLayout activePage="dashboard">
-        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <section class="hero-section overflow-hidden rounded-[2rem] shadow-xl relative text-white">
                 <div class="hero-bg absolute inset-0 z-0"></div>
                 <!-- NOISE OVERLAY -->
                 <div class="absolute inset-0 z-0 opacity-5 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
                 
+                <!-- Parallax Drift Orbs -->
+                <div ref="heroOrb1" class="hero-orb absolute -right-20 -top-20 size-[30rem] rounded-full bg-white/10 blur-[80px]"></div>
+                <div ref="heroOrb2" class="hero-orb absolute -bottom-32 -left-20 size-[25rem] rounded-full bg-emerald-400/20 blur-[100px]"></div>
+
                 <div class="relative z-10 grid gap-8 px-6 py-12 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
                     <div class="flex flex-col justify-center">
-                        <div ref="heroBadge" class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
+                        <div ref="heroBadge" class="hero-el inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white self-start backdrop-blur-md">
                             <Sparkles class="size-4" />
                             Trang chủ khách hàng
                         </div>
-                        <h1 ref="heroHeadline" class="mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
+                        <h1 ref="heroHeadline" class="hero-el mt-6 max-w-2xl font-serif text-4xl sm:text-5xl lg:text-6xl text-white">
                             Chào {{ firstName }}, dịch vụ Đà Lạt <br><em class="opacity-85 font-serif italic">ngay trong tầm tay</em>
                         </h1>
-                        <p ref="heroDesc" class="mt-4 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">{{ heroSummary }}</p>
-                        <div ref="heroButtons" class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <p ref="heroDesc" class="hero-el mt-4 max-w-2xl text-base leading-7 text-emerald-50 sm:text-lg">{{ heroSummary }}</p>
+                        <div ref="heroButtons" class="hero-el mt-8 flex flex-col gap-3 sm:flex-row">
                             <Link href="/services" class="btn inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-emerald-950 transition hover:bg-stone-100">
                                 <Compass class="size-4" />
                                 Tìm dịch vụ mới
@@ -150,20 +155,20 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <div ref="heroStats" class="grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
+                    <div ref="heroStats" class="hero-el grid grid-cols-2 content-center rounded-[2rem] border border-white/15 bg-white/5 shadow-2xl backdrop-blur-md overflow-hidden">
                         <div class="border-b border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-emerald-100/70">
                                 <ClipboardList class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Tổng booking</p>
                             </div>
-                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.totalBookings }}</p>
+                            <AnimatedCounter class="mt-3 font-serif text-4xl text-white" :target="props.stats.totalBookings ?? 0" />
                         </div>
                         <div class="border-b border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-emerald-100/70">
                                 <Calendar class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Lịch sắp tới</p>
                             </div>
-                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.upcomingBookings }}</p>
+                            <AnimatedCounter class="mt-3 font-serif text-4xl text-white" :target="props.stats.upcomingBookings ?? 0" />
                         </div>
                         <div class="group relative overflow-hidden border-r border-white/10 p-5 sm:p-6 transition hover:bg-white/5">
                             <div v-if="props.stats.pendingBookings > 0" class="absolute -bottom-10 -left-10 size-32 rounded-full bg-amber-400/20 blur-3xl transition duration-500 group-hover:bg-amber-400/30"></div>
@@ -171,21 +176,21 @@ onMounted(async () => {
                                 <CalendarClock class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Chờ xác nhận</p>
                             </div>
-                            <p class="relative z-10 mt-3 font-serif text-4xl text-white">{{ props.stats.pendingBookings }}</p>
+                            <AnimatedCounter class="relative z-10 mt-3 font-serif text-4xl text-white" :target="props.stats.pendingBookings ?? 0" />
                         </div>
                         <div class="p-5 sm:p-6 transition hover:bg-white/5">
                             <div class="flex items-center gap-2 text-emerald-100/70">
                                 <Heart class="size-4" />
                                 <p class="text-[10px] font-bold uppercase tracking-[0.2em]">Đã lưu</p>
                             </div>
-                            <p class="mt-3 font-serif text-4xl text-white">{{ props.stats.totalFavorites }}</p>
+                            <AnimatedCounter class="mt-3 font-serif text-4xl text-white" :target="props.stats.totalFavorites ?? 0" />
                         </div>
                     </div>
                 </div>
             </section>
 
             <div class="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Cần xử lý</p>
@@ -206,7 +211,7 @@ onMounted(async () => {
                 </section>
 
                 <div class="space-y-6">
-                    <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                    <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Đi nhanh</p>
@@ -245,7 +250,7 @@ onMounted(async () => {
                 </div>
             </div>
 
-            <section ref="contentSections" class="mt-8 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+            <section class="animate-fade-up mt-8 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Sắp diễn ra</p>
@@ -256,7 +261,7 @@ onMounted(async () => {
                 <Deferred data="upcomingBookings">
                     <template #fallback>
                         <div class="mt-6">
-                            <AppSkeleton variant="card" lines="3" />
+                            <AppSkeleton variant="card" :lines="3" />
                         </div>
                     </template>
                     <div v-if="upcomingBookings && upcomingBookings.length > 0" class="mt-6 grid gap-4 lg:grid-cols-3">
@@ -286,7 +291,7 @@ onMounted(async () => {
             </section>
 
             <div class="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Gần đây</p>
@@ -334,7 +339,7 @@ onMounted(async () => {
                     </Deferred>
                 </section>
 
-                <section ref="contentSections" class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+                <section class="animate-fade-up rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Gợi ý cho bạn</p>
@@ -345,7 +350,7 @@ onMounted(async () => {
                     <Deferred data="recommendedServices">
                         <template #fallback>
                             <div class="mt-6 space-y-4">
-                                <AppSkeleton variant="card" lines="3" />
+                                <AppSkeleton variant="card" :lines="3" />
                             </div>
                         </template>
                         <div v-if="recommendedServices && recommendedServices.length > 0" class="mt-6 space-y-4">
@@ -380,8 +385,7 @@ onMounted(async () => {
                 </section>
             </div>
         </div>
-    </CustomerLayout>
-</template>
+    </template>
 
 <style scoped>
 .hero-section {
@@ -394,5 +398,37 @@ onMounted(async () => {
         #2d6a4f 40%,     /* Xanh thông */
         #52b788 100%     /* Xanh nhạt — sương mù */
     );
+}
+.hero-el {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* === Hero Orbs Drift (CSS — always running, parallax via GSAP) === */
+.hero-orb {
+    animation: drift 10s ease-in-out infinite;
+    will-change: transform;
+}
+.hero-orb:last-of-type {
+    animation-direction: reverse;
+    animation-duration: 12s;
+}
+@keyframes drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(18px, -14px, 0) scale(1.05); }
+}
+
+/* === Initial State for GSAP Animations === */
+.action-card, .quick-link, .animate-fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-el, .hero-orb, .action-card, .quick-link, .animate-fade-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
 </style>

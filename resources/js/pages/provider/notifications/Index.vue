@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ layout: ProviderLayout });
 import { Head, router } from '@inertiajs/vue3';
 import {
     Bell, BellOff, Calendar, CheckCircle,
@@ -62,8 +63,7 @@ function markAllRead() {
 <template>
     <Head title="Thông báo - Nhà cung cấp" />
 
-    <ProviderLayout activePage="notifications">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                 <div class="mb-6 flex items-center justify-between">
                     <div>
@@ -113,5 +113,4 @@ function markAllRead() {
                 </div>
             </div>
         </div>
-    </ProviderLayout>
-</template>
+    </template>

@@ -1,5 +1,5 @@
-import { Outlet, Link } from "react-router-dom";
 import { Search, User, Menu, Map, Wrench, Briefcase } from "lucide-react";
+import { Outlet, Link } from "react-router-dom";
 
 export default function RootLayout() {
   return (

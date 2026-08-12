@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+defineOptions({ layout: CustomerLayout });
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowLeft, Calendar, CheckCircle, Clock, MapPin, MessageSquare,
     Star, User, XCircle, AlertCircle, Package, ChevronRight,
 } from 'lucide-vue-next';
+import { ref } from 'vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
 const props = withDefaults(
@@ -48,8 +49,7 @@ const canReview = props.booking.status === 'hoan_thanh' && !props.booking.hasRev
 <template>
     <Head :title="`Đơn ${booking.code}`" />
 
-    <CustomerLayout activePage="bookings">
-        <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
             <!-- Back -->
             <Link href="/customer/bookings" class="mb-6 inline-flex items-center gap-2 text-sm font-medium text-stone-500 transition hover:text-stone-700">
                 <ArrowLeft class="size-4" /> Quay lại danh sách
@@ -175,7 +175,20 @@ const canReview = props.booking.status === 'hoan_thanh' && !props.booking.hasRev
                         </div>
                         <div class="mt-4 rounded-xl bg-stone-50 px-4 py-3 text-xs text-stone-500">
                             <p><strong>Thanh toán:</strong> {{ booking.paymentMethod === 'cod' ? 'Thanh toán khi hoàn thành' : booking.paymentMethod }}</p>
-                            <p class="mt-1"><strong>Trạng thái:</strong> {{ booking.paymentStatus === 'cho_thanh_toan' ? 'Chưa thanh toán' : 'Đã thanh toán' }}</p>
+                            <p class="mt-1"><strong>Trạng thái:</strong>
+                                <span v-if="booking.paymentStatus === 'cho_thanh_toan'" class="text-amber-600 font-medium">Chưa thanh toán</span>
+                                <span v-else-if="booking.paymentStatus === 'da_dat_coc'" class="text-blue-600 font-medium">Đã đặt cọc ({{ formatVND(booking.deposit || 0) }})</span>
+                                <span v-else class="text-emerald-600 font-medium">Đã thanh toán</span>
+                            </p>
+                        </div>
+                        <div v-if="booking.paymentStatus === 'cho_thanh_toan' && ['cho_xac_nhan', 'da_xac_nhan'].includes(booking.status)" class="mt-4">
+                            <Link
+                                :href="`/customer/bookings/${booking.id}/payment`"
+                                class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                            >
+                                Thanh toán cọc ngay
+                            </Link>
+                            <p class="mt-2 text-center text-[10px] text-stone-400">Yêu cầu cọc 30% để xác nhận dịch vụ</p>
                         </div>
                     </div>
                 </div>
@@ -209,5 +222,4 @@ const canReview = props.booking.status === 'hoan_thanh' && !props.booking.hasRev
                 </div>
             </div>
         </Teleport>
-    </CustomerLayout>
-</template>
+    </template>

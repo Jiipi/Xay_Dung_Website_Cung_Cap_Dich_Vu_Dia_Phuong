@@ -1,3 +1,18 @@
+<script lang="ts">
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import ProviderLayout from '@/layouts/ProviderLayout.vue';
+import { defineComponent, h } from 'vue';
+
+export default defineComponent({
+    layout: (createElement, page) => {
+        const role = page.props.auth?.role;
+        let LayoutComponent = CustomerLayout;
+        if (role === 'Admin') LayoutComponent = AdminLayout;
+        else if (role === 'Nhà cung cấp') LayoutComponent = ProviderLayout;
+        return createElement(LayoutComponent, () => page);
+    }
+});
+</script>
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -7,7 +22,7 @@ import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import MarketplaceLayout from '@/layouts/MarketplaceLayout.vue';
+import CustomerLayout from '@/layouts/CustomerLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/user-password';
 import type { BreadcrumbItem } from '@/types';
@@ -20,17 +35,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const page = usePage();
-const layoutRole = computed(() => {
-    const role = page.props.auth?.role;
-    if (role === 'Admin') return 'admin';
-    if (role === 'Nhà cung cấp') return 'provider';
-    return 'customer';
-});
 </script>
 
 <template>
-    <MarketplaceLayout :role="layoutRole">
-        <Head title="Password settings" />
+            <Head title="Password settings" />
 
         <h1 class="sr-only">Password settings</h1>
 
@@ -118,5 +126,4 @@ const layoutRole = computed(() => {
                 </Form>
             </div>
         </SettingsLayout>
-    </MarketplaceLayout>
-</template>
+    </template>

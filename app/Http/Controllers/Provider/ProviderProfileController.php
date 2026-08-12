@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HoSoNhaCungCap;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\Rules\Password;
 
 class ProviderProfileController extends Controller
 {
@@ -57,9 +58,32 @@ class ProviderProfileController extends Controller
             // User fields
             'ho_ten' => 'required|string|max:255',
             'so_dien_thoai' => 'nullable|string|max:20',
+            'anh_dai_dien' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ], [
+            'anh_dai_dien.image' => 'File phải là hình ảnh.',
+            'anh_dai_dien.mimes' => 'Chỉ hỗ trợ định dạng JPG, PNG, WEBP.',
+            'anh_dai_dien.max' => 'Kích thước ảnh không được vượt quá 2MB.',
         ]);
 
         $user = $request->user();
+
+        \Log::info('Provider Profile Update', [
+            'user_id' => $user->id,
+            'has_avatar' => $request->hasFile('anh_dai_dien'),
+            'content_type' => $request->header('Content-Type'),
+        ]);
+
+        // Validate and update password if provided
+        if ($request->filled('current_password') || $request->filled('password')) {
+            $request->validate([
+                'current_password' => ['required', 'current_password'],
+                'password' => ['required', Password::defaults(), 'confirmed'],
+            ]);
+
+            $user->update([
+                'mat_khau_hash' => \Illuminate\Support\Facades\Hash::make($request->password),
+            ]);
+        }
 
         // Cập nhật thông tin user
         $user->update([
@@ -69,9 +93,9 @@ class ProviderProfileController extends Controller
 
         // Xử lý upload avatar
         if ($request->hasFile('anh_dai_dien')) {
-            $request->validate(['anh_dai_dien' => 'image|mimes:jpg,jpeg,png,webp|max:2048']);
             $path = $request->file('anh_dai_dien')->store('avatars/' . $user->id, 'public');
             $user->update(['anh_dai_dien' => '/storage/' . $path]);
+            \Log::info('Provider avatar saved', ['path' => $path, 'user_id' => $user->id]);
         }
 
         // Cập nhật hồ sơ nhà cung cấp

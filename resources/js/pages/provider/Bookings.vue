@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+defineOptions({ layout: ProviderLayout });
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     Calendar,
@@ -15,6 +15,7 @@ import {
     X as XIcon,
     XCircle,
 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import ProviderLayout from '@/layouts/ProviderLayout.vue';
 
 interface Booking {
@@ -131,19 +132,18 @@ function completeBooking(id: number) {
     router.post(`/provider/bookings/${id}/complete`);
 }
 
-const totalAll = computed(() => Object.values(props.statusCounts).reduce((a, b) => a + b, 0));
+const totalAll = computed(() => Object.values(props.statusCounts).reduce((a, b) => Number(a) + Number(b), 0));
 
 function getCount(key: string): number {
     if (key === 'all') return totalAll.value;
-    return props.statusCounts[key] ?? 0;
+    return Number(props.statusCounts[key] ?? 0);
 }
 </script>
 
 <template>
     <Head title="Quan ly Booking" />
 
-    <ProviderLayout activePage="bookings">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="space-y-6">
                 <div v-if="flash.success" class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                     <CheckCircle2 class="size-5 shrink-0" /> {{ flash.success }}
@@ -333,5 +333,4 @@ function getCount(key: string): number {
                 </div>
             </div>
         </Teleport>
-    </ProviderLayout>
-</template>
+    </template>

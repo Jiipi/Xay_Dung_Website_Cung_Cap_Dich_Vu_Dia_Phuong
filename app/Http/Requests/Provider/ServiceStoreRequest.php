@@ -20,6 +20,7 @@ class ServiceStoreRequest extends FormRequest
             'gia_tu' => 'nullable|numeric|min:0',
             'gia_den' => 'nullable|numeric|min:0|gte:gia_tu',
             'don_vi_gia' => 'nullable|string|max:50',
+            'thoi_luong_phut' => 'required|integer|min:15|max:1440',
             'dia_chi_hien_thi' => 'nullable|string|max:500',
             'anh_dich_vu' => 'nullable|array|max:10',
             'anh_dich_vu.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',

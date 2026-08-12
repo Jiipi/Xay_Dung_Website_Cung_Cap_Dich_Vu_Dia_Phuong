@@ -67,6 +67,7 @@ class EloquentServiceRepository implements ServiceRepositoryInterface
     public function getActivePublicServices(): Collection
     {
         return DichVu::with(['nhaCungCap.hoSoNhaCungCap', 'danhMuc.parent'])
+            ->where('trang_thai_duyet', 'da_duyet')
             ->where('trang_thai_hoat_dong', 'hoat_dong')
             ->orderByDesc('id')
             ->get();

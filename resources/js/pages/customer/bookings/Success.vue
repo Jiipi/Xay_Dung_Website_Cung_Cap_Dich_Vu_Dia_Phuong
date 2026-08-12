@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({ layout: CustomerLayout });
 import { Head, Link } from '@inertiajs/vue3';
 import { CheckCircle, Calendar, MapPin, Clock, Copy, ArrowRight, Home } from 'lucide-vue-next';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
@@ -19,8 +20,7 @@ function copyCode() {
 <template>
     <Head title="Đặt lịch thành công!" />
 
-    <CustomerLayout activePage="bookings">
-        <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
             <!-- Success Card -->
             <div class="rounded-[2rem] border bg-white p-8 shadow-sm text-center" style="border-color: var(--dl-warm-border);">
                 <!-- Icon -->
@@ -81,11 +81,17 @@ function copyCode() {
                 <!-- Actions -->
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                     <Link
+                        :href="`/customer/bookings/${booking.id}/payment`"
+                        class="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-700 shadow-lg shadow-blue-500/30"
+                    >
+                        Thanh toán cọc ngay <ArrowRight class="size-4" />
+                    </Link>
+                    <Link
                         :href="`/customer/bookings/${booking.id}`"
                         class="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition hover:opacity-90"
                         style="background: var(--dl-brand);"
                     >
-                        Xem chi tiết đơn <ArrowRight class="size-4" />
+                        Xem chi tiết đơn
                     </Link>
                     <Link
                         href="/"
@@ -96,5 +102,4 @@ function copyCode() {
                 </div>
             </div>
         </div>
-    </CustomerLayout>
-</template>
+    </template>

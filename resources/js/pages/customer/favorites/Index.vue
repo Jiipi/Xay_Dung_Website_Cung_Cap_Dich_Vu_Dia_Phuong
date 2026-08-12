@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+defineOptions({ layout: CustomerLayout });
 import { Head, Link } from '@inertiajs/vue3';
 import { Heart, HeartOff, MapPin, Search, Star } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
 const props = withDefaults(
@@ -76,8 +77,7 @@ async function undoRemove() {
 <template>
     <Head title="Dịch vụ yêu thích" />
 
-    <CustomerLayout activePage="favorites">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                 <div v-if="lastRemoved" class="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -174,5 +174,4 @@ async function undoRemove() {
                 </div>
             </div>
         </div>
-    </CustomerLayout>
-</template>
+    </template>

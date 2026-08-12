@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, CheckIcon, CheckCheckIcon } from 'lucide-vue-next';
-import axios from 'axios';
+import { Link } from '@inertiajs/vue3';
+import { Bell } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRealtimeUserChannel } from '@/composables/useRealtimeUserChannel';
 
-const page = usePage();
-const unreadCount = computed(() => (page.props as any).unreadNotifications ?? 0);
+const { recentNotifications, setRecentNotifications, unreadNotifications } = useRealtimeUserChannel();
+const unreadCount = computed(() => unreadNotifications.value);
 
 const isOpen = ref(false);
-const notifications = ref<any[]>([]);
+const notifications = recentNotifications;
 const isLoading = ref(false);
 
 const dropdownRef = ref<HTMLElement | null>(null);
@@ -23,8 +23,19 @@ function toggleDropdown() {
 async function fetchRecent() {
     isLoading.value = true;
     try {
-        const { data } = await axios.get('/customer/notifications/recent');
-        notifications.value = data;
+        const response = await fetch('/notifications/recent', {
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Notification request failed with ${response.status}`);
+        }
+
+        setRecentNotifications(await response.json());
     } catch (e) {
         console.error('Failed to load notifications', e);
     } finally {
@@ -91,7 +102,7 @@ onUnmounted(() => {
                         <Link
                             v-for="n in notifications"
                             :key="n.id"
-                            href="/customer/notifications"
+                            href="/notifications"
                             class="block p-4 transition hover:bg-stone-50"
                             :class="n.read ? 'opacity-70' : 'bg-brand/5'"
                             @click="isOpen = false"
@@ -121,4 +132,3 @@ onUnmounted(() => {
         </Transition>
     </div>
 </template>
-

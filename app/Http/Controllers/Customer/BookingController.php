@@ -27,10 +27,14 @@ class BookingController extends Controller
      */
     public function store(CreateBookingRequest $request): RedirectResponse
     {
-        $result = $this->bookingService->createBooking($request->validated(), auth()->id());
+        try {
+            $result = $this->bookingService->createBooking($request->validated(), auth()->id());
 
-        return redirect()->route('customer.bookings.success', $result['booking_id'])
-            ->with('success', 'Bạn đã đặt lịch thành công!');
+            return redirect()->route('customer.bookings.success', $result['booking_id'])
+                ->with('success', 'Bạn đã đặt lịch thành công!');
+        } catch (Exception $e) {
+            return back()->withErrors(['thoi_gian_thuc_hien' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -89,6 +93,7 @@ class BookingController extends Controller
                 'fee'          => (float) $booking->phi_dich_vu,
                 'discount'     => (float) $booking->giam_gia,
                 'total'        => (float) $booking->tong_tien,
+                'deposit'      => (float) $booking->tien_coc,
                 'status'       => $booking->trang_thai_don,
                 'paymentStatus'=> $booking->trang_thai_thanh_toan,
                 'paymentMethod'=> $booking->phuong_thuc_thanh_toan,

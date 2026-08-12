@@ -8,17 +8,10 @@ mkdir -p storage/framework/{sessions,views,cache}
 mkdir -p bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
-# Install PHP dependencies if vendor doesn't exist
-if [ ! -d "vendor" ]; then
+# Install PHP dependencies if vendor volume is empty
+if [ ! -f "vendor/autoload.php" ]; then
     echo "Installing Composer dependencies..."
     composer install --no-interaction --prefer-dist --optimize-autoloader
-fi
-
-# Install Node dependencies and build assets if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    echo "Installing Node dependencies and building assets..."
-    npm ci
-    npm run build
 fi
 
 # Set up .env file if it doesn't exist

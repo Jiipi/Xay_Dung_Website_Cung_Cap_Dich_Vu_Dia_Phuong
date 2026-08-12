@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+defineOptions({ layout: CustomerLayout });
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
     CalendarRange, CheckCircle, ChevronRight,
     Clock, Package, XCircle, Star,
 } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
 import CustomerLayout from '@/layouts/CustomerLayout.vue';
 
 const props = withDefaults(
@@ -51,8 +52,7 @@ function tabCount(key: string) {
 <template>
     <Head title="Booking của tôi" />
 
-    <CustomerLayout activePage="bookings">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <div class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
                 <!-- Header -->
                 <div class="mb-6 flex items-center justify-between">
@@ -147,5 +147,4 @@ function tabCount(key: string) {
                 </div>
             </div>
         </div>
-    </CustomerLayout>
-</template>
+    </template>
