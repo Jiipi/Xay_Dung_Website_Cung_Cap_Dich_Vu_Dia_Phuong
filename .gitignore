@@ -1,9 +1,6 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/.next
-/.vercel
-/tsconfig.tsbuildinfo
 /public/build
 /public/hot
 /public/storage
