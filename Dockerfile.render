@@ -51,6 +51,10 @@ COPY docker/render/nginx.conf /etc/nginx/http.d/default.conf
 # Supervisor config — run Nginx + PHP-FPM together
 COPY docker/render/supervisord.conf /etc/supervisor.d/app.ini
 
+# Entrypoint script for auto-migration and caching on startup
+COPY docker/render/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /var/www
 
 # Copy app source
@@ -70,6 +74,9 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 
 # Expose port 80 for Render
 EXPOSE 80
+
+# Use entrypoint to run migrations before supervisor starts
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Run supervisor (manages both nginx + php-fpm)
 CMD ["supervisord", "-n", "-c", "/etc/supervisord.conf"]
