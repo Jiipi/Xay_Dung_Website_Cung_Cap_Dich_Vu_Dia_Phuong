@@ -1,104 +1,87 @@
-# Render Blueprint — auto-provision all services
-# Docs: https://docs.render.com/infrastructure-as-code
-#
-# Deploy: push file này lên repo, vào https://dashboard.render.com/select-repo
-# chọn repo → Render tự nhận render.yaml và tạo toàn bộ services.
-
 services:
-  # ─── Web Service (Laravel + Vite assets) ─────────────────
   - type: web
     name: dalat-services
     runtime: docker
     region: singapore
-    plan: starter
+    plan: free
     dockerfilePath: Dockerfile.render
+
     envVars:
       - key: APP_NAME
         value: "Dalat Services"
+
       - key: APP_ENV
         value: production
+
       - key: APP_KEY
         generateValue: true
+
       - key: APP_DEBUG
         value: "false"
+
       - key: APP_URL
         value: https://dalat-services.onrender.com
+
       - key: APP_LOCALE
         value: vi
+
       - key: APP_FALLBACK_LOCALE
         value: vi
+
       - key: DB_CONNECTION
         value: pgsql
+
       - key: DB_URL
         fromDatabase:
           name: dalat-services-db
           property: connectionString
+
       - key: SESSION_DRIVER
         value: database
+
       - key: SESSION_LIFETIME
         value: "120"
+
       - key: SESSION_SECURE_COOKIE
         value: "true"
+
       - key: CACHE_STORE
         value: database
+
       - key: QUEUE_CONNECTION
-        value: database
+        value: sync
+
       - key: BROADCAST_CONNECTION
         value: log
+
       - key: FILESYSTEM_DISK
         value: local
+
       - key: BCRYPT_ROUNDS
         value: "12"
+
       - key: MAIL_MAILER
         value: log
+
       - key: PAYMENTS_DEMO_ENABLED
         value: "false"
+
       - key: VITE_APP_NAME
         value: "Dalat Services"
+
       - key: VITE_REVERB_ENABLED
         value: "false"
+
       - key: OPENAI_API_KEY
-        sync: false # Set manually in dashboard
+        sync: false
+
       - key: OPENAI_MODEL
         value: gpt-4o
 
-  # ─── Background Worker (Queue) ──────────────────────────
-  - type: worker
-    name: dalat-services-worker
-    runtime: docker
-    region: singapore
-    plan: starter
-    dockerfilePath: Dockerfile.render
-    dockerCommand: php /var/www/artisan queue:work --sleep=3 --tries=3 --max-time=3600
-    envVars:
-      - key: APP_NAME
-        value: "Dalat Services"
-      - key: APP_ENV
-        value: production
-      - key: APP_KEY
-        fromService:
-          name: dalat-services
-          type: web
-          envVarKey: APP_KEY
-      - key: APP_DEBUG
-        value: "false"
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_URL
-        fromDatabase:
-          name: dalat-services-db
-          property: connectionString
-      - key: QUEUE_CONNECTION
-        value: database
-      - key: CACHE_STORE
-        value: database
-      - key: MAIL_MAILER
-        value: log
 
 databases:
-  # ─── PostgreSQL ─────────────────────────────────────────
   - name: dalat-services-db
-    plan: starter
+    plan: free
     region: singapore
     databaseName: dalat_services
     user: dalat_services
