@@ -19,6 +19,8 @@ services:
       - key: APP_DEBUG
         value: "false"
 
+      # Đổi sang custom domain (vd. https://dalatservices.tranngochung.id.vn)
+      # sau khi Vercel proxy + DNS đã hoạt động, rồi redeploy để config:cache nhận URL mới.
       - key: APP_URL
         value: https://dalat-services.onrender.com
 

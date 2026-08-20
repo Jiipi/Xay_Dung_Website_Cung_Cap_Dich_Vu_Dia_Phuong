@@ -1,0 +1,4 @@
+# Pure reverse-proxy project: do not upload app source as static files.
+# Only vercel.json is needed on Vercel; Laravel runs on Render.
+*
+!vercel.json

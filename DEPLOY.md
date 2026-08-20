@@ -359,25 +359,30 @@ fi
 
 Nếu muốn dùng **domain riêng trên Vercel** + hưởng edge caching cho assets, bạn có thể setup Vercel làm reverse proxy trỏ về Render:
 
-### 4.1. Tạo `vercel.json` ở root
+### 4.1. `vercel.json` + `.vercelignore` (bắt buộc)
+
+Vercel **không chạy PHP**. Chỉ dùng làm reverse proxy → Render.
+
+**Không** set `outputDirectory: "public"`. Nếu set, Vercel sẽ serve `public/index.php` như file tĩnh → trình duyệt hiện source PHP.
 
 ```json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "https://dalat-services.onrender.com/$1"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/build/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
+      "source": "/:path*",
+      "destination": "https://dalat-services.onrender.com/:path*"
     }
   ]
 }
+```
+
+Kèm `.vercelignore` để không upload source Laravel lên Vercel:
+
+```gitignore
+*
+!vercel.json
 ```
 
 ### 4.2. Deploy lên Vercel
@@ -392,20 +397,23 @@ vercel --prod
 1. Vào [Vercel Dashboard](https://vercel.com/dashboard)
 2. Import project → chọn repo
 3. **Framework Preset**: `Other`
-4. **Build Command**: để trống (không build gì trên Vercel)
-5. **Output Directory**: để trống
-6. **Environment Variables**: không cần (mọi thứ chạy trên Render)
+4. **Build Command**: để trống / override thành rỗng
+5. **Output Directory**: **để trống** (không phải `public`)
+6. **Install Command**: có thể disable
+7. **Root Directory**: repo root (nơi có `vercel.json`)
+8. **Environment Variables**: không cần trên Vercel
 
 ### 4.4. Custom Domain
 
 1. Vercel Dashboard → **Settings** → **Domains**
-2. Thêm domain: `dalatservices.com`
-3. Cập nhật DNS tại registrar (Namecheap, Cloudflare...):
-   - **CNAME**: `cname.vercel-dns.com`
-4. Sau khi domain active, cập nhật biến trên **Render**:
+2. Thêm domain (vd. `dalatservices.tranngochung.id.vn`)
+3. DNS: CNAME → `cname.vercel-dns.com` (hoặc record Vercel chỉ định)
+4. Sau khi domain active, cập nhật **Render** env:
    ```
-   APP_URL=https://dalatservices.com
+   APP_URL=https://dalatservices.tranngochung.id.vn
+   SESSION_SECURE_COOKIE=true
    ```
+   Rồi **Manual Deploy** lại Web Service (hoặc restart) để `config:cache` nhận `APP_URL` mới.
 
 ---
 
@@ -480,12 +488,39 @@ Và trong `app/Http/Middleware/TrustProxies.php`:
 protected $proxies = '*';
 ```
 
+### Domain hiện source PHP (`<?php use Illuminate...`)
+
+Nguyên nhân: Vercel đang deploy `public/` tĩnh (`outputDirectory: "public"`), không proxy sang Render.
+
+Cách sửa:
+1. Xóa `outputDirectory` khỏi `vercel.json` và Project Settings
+2. Chỉ giữ rewrite → `https://dalat-services.onrender.com/:path*`
+3. Thêm `.vercelignore` (`*` + `!vercel.json`)
+4. Redeploy Vercel Production
+5. Kiểm tra: `curl -I https://your-domain` phải **không** còn `Content-Type: application/x-httpd-php`
+
+### Render trả 500 mọi trang (trừ `/up`), CSRF rỗng
+
+`/up` không dùng session middleware; trang Inertia thì có. CSRF rỗng = session không start được, thường do:
+
+1. **DB down / Postgres free hết hạn / sai `DB_URL`** → `SESSION_DRIVER=database` fail
+2. **Migration chưa chạy** (entrypoint cũ nuốt lỗi migrate)
+3. **`APP_KEY` trống hoặc đổi** sau khi đã có cookie/session mã hóa
+
+Cách sửa trên Render Dashboard:
+1. Environment → xác nhận `APP_KEY` dạng `base64:...` (chạy local: `php artisan key:generate --show`)
+2. `DB_URL` trỏ đúng Postgres **Internal** URL, status DB = Available
+3. Logs → tìm `Database connection failed` / `SQLSTATE` / `APP_KEY`
+4. Sau khi DB OK: **Manual Deploy** (entrypoint mới fail-fast nếu DB/migrate lỗi)
+5. Shell (nếu service lên): `php artisan migrate --force && php artisan config:clear && php artisan config:cache`
+
 ### Lỗi "419 CSRF Token Mismatch"
 
 Kiểm tra:
 1. `SESSION_DRIVER=database` và bảng `sessions` đã migrate
 2. `SESSION_DOMAIN` để `null` (hoặc set đúng domain)
 3. `SESSION_SECURE_COOKIE=true` nếu dùng HTTPS
+4. Đã `trustProxies` (bắt buộc khi đi qua Vercel/Cloudflare)
 
 ### Assets không load (404 trên `/build/*`)
 
