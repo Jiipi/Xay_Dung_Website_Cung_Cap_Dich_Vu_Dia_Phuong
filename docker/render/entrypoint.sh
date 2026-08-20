@@ -75,9 +75,14 @@ if [ -z "${DB_URL:-}${DATABASE_URL:-}${DB_HOST:-}" ]; then
     exit 1
 fi
 
-# Default to file sessions on free tier unless the operator overrides.
-export SESSION_DRIVER="${SESSION_DRIVER:-file}"
-export CACHE_STORE="${CACHE_STORE:-file}"
+# Force file sessions/cache on Render free tier. Database sessions are the
+# #1 cause of empty CSRF + 500 on every web route when Postgres blips or the
+# sessions table is missing; /up stays 200 because it skips session middleware.
+if [ "${SESSION_DRIVER:-}" != "file" ] || [ "${CACHE_STORE:-}" != "file" ]; then
+    echo "==> Forcing SESSION_DRIVER=file and CACHE_STORE=file (was SESSION_DRIVER=${SESSION_DRIVER:-<unset>} CACHE_STORE=${CACHE_STORE:-<unset>})"
+fi
+export SESSION_DRIVER=file
+export CACHE_STORE=file
 
 # Fail fast if the database is unreachable — homepage/services still query DB.
 echo "==> Checking database connection..."
@@ -116,29 +121,28 @@ php artisan view:cache
 # route:cache fails when routes contain closures (dashboard redirect) — skip safely
 php artisan route:cache 2>/dev/null || echo "Skipping route:cache (closures present or cache failed)"
 
-# Prove session driver works AS www-data (same user as php-fpm).
-echo "==> Verifying session driver as www-data (${SESSION_DRIVER})..."
-su -s /bin/sh www-data -c 'php -r "
-require \"vendor/autoload.php\";
-\$app = require \"bootstrap/app.php\";
-\$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
-\$kernel->bootstrap();
+# Prove APP_KEY encrypts + session starts (root is enough at boot; php-fpm
+# uses the same storage paths we just chown'd to www-data).
+echo "==> Verifying session driver (${SESSION_DRIVER})..."
+php -r '
+require "vendor/autoload.php";
+$app = require "bootstrap/app.php";
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 try {
-    // Prove APP_KEY can encrypt (invalid keys fail here).
-    \$enc = \$app->make(\"encrypter\");
-    \$enc->encryptString(\"boot-check\");
-    \$store = \$app->make(\"session\")->driver();
-    \$store->start();
-    \$token = \$store->token();
-    if (! is_string(\$token) || \$token === \"\") {
-        throw new RuntimeException(\"Session started but CSRF token is empty\");
+    $app->make("encrypter")->encryptString("boot-check");
+    $store = $app->make("session")->driver();
+    $store->start();
+    $token = $store->token();
+    if (! is_string($token) || $token === "") {
+        throw new RuntimeException("Session started but CSRF token is empty");
     }
-    echo \"Session OK (driver=\".config(\"session.driver\").\", token length \".strlen(\$token).\")\n\";
-} catch (Throwable \$e) {
-    fwrite(STDERR, \"ERROR: Session/APP_KEY failed under www-data: \".\$e->getMessage().PHP_EOL);
+    echo "Session OK (driver=".config("session.driver").", token length ".strlen($token).")\n";
+} catch (Throwable $e) {
+    fwrite(STDERR, "ERROR: Session/APP_KEY failed: ".$e->getMessage().PHP_EOL);
     exit(1);
 }
-"'
+'
 
 echo "==> Boot config: APP_URL=${APP_URL:-<empty>} APP_ENV=${APP_ENV:-<empty>} SESSION_DRIVER=${SESSION_DRIVER} CACHE_STORE=${CACHE_STORE}"
 echo "==> APP_KEY format: OK (base64:...)"
