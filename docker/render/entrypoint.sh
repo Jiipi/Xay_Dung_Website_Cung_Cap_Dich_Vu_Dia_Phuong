@@ -5,11 +5,23 @@ cd /var/www
 
 echo "==> Bootstrapping Dalat Services..."
 
-if [ -z "${APP_KEY:-}" ]; then
-    echo "ERROR: APP_KEY is empty. Set APP_KEY in Render Environment."
-    echo "       Local: php artisan key:generate --show"
-    echo "       Value MUST look like: base64:xxxxxxxx (Laravel format)."
-    echo "       Render 'generateValue' secrets are NOT valid Laravel APP_KEY values."
+# Normalize APP_KEY: trim whitespace + surrounding quotes (common paste mistakes).
+APP_KEY="$(printf '%s' "${APP_KEY:-}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
+export APP_KEY
+
+# Safe diagnostics (never print the full secret).
+_key_len=${#APP_KEY}
+_key_prefix="$(printf '%s' "$APP_KEY" | cut -c1-12)"
+_key_has_base64=no
+case "$APP_KEY" in base64:*) _key_has_base64=yes ;; esac
+echo "==> APP_KEY diagnostics: length=${_key_len} starts_with_base64=${_key_has_base64} prefix='${_key_prefix}...'"
+
+if [ -z "${APP_KEY}" ]; then
+    echo "ERROR: APP_KEY is empty after trim. Set APP_KEY in Render → Environment."
+    echo "       Value MUST be exactly: base64:<44-char-string>"
+    echo "       Example shape: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    echo "       Do NOT use Render's Generate button (wrong format)."
+    echo "       Do NOT wrap the value in quotes in the dashboard."
     exit 1
 fi
 
@@ -22,15 +34,24 @@ case "${APP_KEY}" in
         # rough length check: 32 raw bytes → 44 base64 chars (with padding)
         if [ "${#key_body}" -lt 40 ]; then
             echo "ERROR: APP_KEY looks too short after base64: prefix (${#key_body} chars)."
-            echo "       Run locally: php artisan key:generate --show"
+            echo "       Expected ~44 chars after base64:"
+            echo "       Paste: base64:gOExMOjr4WKseT3uLxXPyDK3urxuA5dAyLIPQVi31yk="
             exit 1
         fi
         ;;
     *)
         echo "ERROR: APP_KEY must start with 'base64:' (Laravel format)."
-        echo "       Current prefix is not base64:. Render generateValue is NOT enough."
-        echo "       Run locally: php artisan key:generate --show"
-        echo "       Paste the full value into Render → Environment → APP_KEY"
+        echo "       Received prefix: '${_key_prefix}...' (length=${_key_len})"
+        echo "       Render Generate / random secrets are NOT valid."
+        echo ""
+        echo "       FIX NOW (Render Dashboard):"
+        echo "       1. Service → Environment"
+        echo "       2. DELETE the existing APP_KEY row completely"
+        echo "       3. Add new env var:"
+        echo "            Key:   APP_KEY"
+        echo "            Value: base64:gOExMOjr4WKseT3uLxXPyDK3urxuA5dAyLIPQVi31yk="
+        echo "       4. Save Changes (wait for redeploy) OR Manual Deploy"
+        echo "       5. Logs must show: starts_with_base64=yes"
         exit 1
         ;;
 esac
