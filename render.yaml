@@ -19,10 +19,10 @@ services:
       - key: APP_DEBUG
         value: "false"
 
-      # Đổi sang custom domain (vd. https://dalatservices.tranngochung.id.vn)
-      # sau khi Vercel proxy + DNS đã hoạt động, rồi redeploy để config:cache nhận URL mới.
+      # Public browser origin (Vercel custom domain). Must match the domain users open
+      # so Vite/asset URLs are same-origin and avoid CORS to onrender.com.
       - key: APP_URL
-        value: https://dalat-services.onrender.com
+        value: https://dalatservices.tranngochung.id.vn
 
       - key: APP_LOCALE
         value: vi

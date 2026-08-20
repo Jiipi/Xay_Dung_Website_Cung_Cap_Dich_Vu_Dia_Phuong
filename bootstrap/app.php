@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsProvider;
+use App\Http\Middleware\ForcePublicUrl;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -64,6 +65,12 @@ return Application::configure(basePath: $basePath)
         $middleware->trustProxies(at: '*');
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        // Run before Inertia/Vite URL generation so assets stay same-origin
+        // when the public host is a Vercel domain proxying to Render.
+        $middleware->web(prepend: [
+            ForcePublicUrl::class,
+        ]);
 
         $middleware->web(append: [
             HandleAppearance::class,

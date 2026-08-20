@@ -415,6 +415,9 @@ vercel --prod
    ```
    Rồi **Manual Deploy** lại Web Service (hoặc restart) để `config:cache` nhận `APP_URL` mới.
 
+> **CORS / asset cross-origin**: Nếu `APP_URL` vẫn là `https://dalat-services.onrender.com` trong khi user mở domain Vercel, HTML sẽ nhúng JS tuyệt đối từ onrender.com → browser chặn CORS.  
+> Cách đúng: `APP_URL` = domain công khai + middleware `ForcePublicUrl` (ưu tiên `X-Forwarded-Host`). Nginx cũng gửi `Access-Control-Allow-Origin: *` cho `/build/` như lớp dự phòng.
+
 ---
 
 ## 📋 Phần 5: Checklist Deploy

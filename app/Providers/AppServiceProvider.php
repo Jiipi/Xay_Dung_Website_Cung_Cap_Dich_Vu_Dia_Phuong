@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Date::use(CarbonImmutable::class);
 
+        // Public request host is finalized in ForcePublicUrl middleware (proxy-aware).
+        // Keep scheme HTTPS in production for console/queue generated URLs.
         if (app()->isProduction()) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
