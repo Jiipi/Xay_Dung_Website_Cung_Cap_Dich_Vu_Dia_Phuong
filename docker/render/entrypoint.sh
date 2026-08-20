@@ -43,10 +43,15 @@ chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R ug+rwx storage bootstrap/cache || true
 
 echo "==> Caching configuration..."
+# Drop stale caches before rebuild so APP_URL / proxy fixes always apply.
+php artisan config:clear 2>/dev/null || true
+php artisan view:clear 2>/dev/null || true
 php artisan config:cache
 php artisan view:cache
 # route:cache fails when routes contain closures (dashboard redirect) — skip safely
 php artisan route:cache 2>/dev/null || echo "Skipping route:cache (closures present or cache failed)"
+
+echo "==> Boot config: APP_URL=${APP_URL:-<empty>} APP_ENV=${APP_ENV:-<empty>}"
 
 echo "==> Starting Supervisord (Nginx + PHP-FPM)..."
 exec "$@"

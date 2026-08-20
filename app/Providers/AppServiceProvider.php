@@ -13,6 +13,7 @@ use App\Repositories\Eloquent\Service\EloquentServiceRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -49,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         if (app()->isProduction()) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Root-relative Vite URLs (/build/...) so custom-domain pages never
+        // pull JS/CSS from a different origin (avoids CORS when APP_URL or
+        // X-Forwarded-Host is wrong behind Vercel → Render).
+        Vite::createAssetPathsUsing(fn (string $path, $secure = null): string => '/'.ltrim($path, '/'));
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

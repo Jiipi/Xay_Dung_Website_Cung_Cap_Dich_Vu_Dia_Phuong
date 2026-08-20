@@ -251,7 +251,7 @@ APP_NAME="Dalat Services"
 APP_ENV=production
 APP_KEY=base64:xxxxx                    # Chạy: php artisan key:generate --show
 APP_DEBUG=false
-APP_URL=https://dalat-services.onrender.com
+APP_URL=https://dalatservices.tranngochung.id.vn
 APP_LOCALE=vi
 APP_FALLBACK_LOCALE=vi
 APP_FAKER_LOCALE=vi_VN
@@ -415,8 +415,9 @@ vercel --prod
    ```
    Rồi **Manual Deploy** lại Web Service (hoặc restart) để `config:cache` nhận `APP_URL` mới.
 
-> **CORS / asset cross-origin**: Nếu `APP_URL` vẫn là `https://dalat-services.onrender.com` trong khi user mở domain Vercel, HTML sẽ nhúng JS tuyệt đối từ onrender.com → browser chặn CORS.  
-> Cách đúng: `APP_URL` = domain công khai + middleware `ForcePublicUrl` (ưu tiên `X-Forwarded-Host`). Nginx cũng gửi `Access-Control-Allow-Origin: *` cho `/build/` như lớp dự phòng.
+> **CORS / asset cross-origin**: Nếu HTML nhúng JS tuyệt đối từ `onrender.com` trong khi user mở domain Vercel → browser chặn CORS.  
+> Code hiện tại: Vite emit **path tương đối** `/build/...` (same-origin qua Vercel proxy), `ForcePublicUrl` lấy root từ `APP_URL`, Nginx CORS `*` trên `/build/` là lớp dự phòng.  
+> Vẫn set trên Render: `APP_URL=https://dalatservices.tranngochung.id.vn` rồi Manual Deploy.
 
 ---
 
