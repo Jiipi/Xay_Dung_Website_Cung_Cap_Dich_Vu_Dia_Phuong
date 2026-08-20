@@ -37,10 +37,31 @@ php artisan migrate --force --isolated
 # Storage link (ignore if already linked)
 php artisan storage:link 2>/dev/null || true
 
-# Ensure runtime dirs are writable for file-based fallbacks/logs
+# Ensure runtime dirs are writable for file-based sessions/cache/logs
 mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R ug+rwx storage bootstrap/cache || true
+
+# Prove session driver can start (catches empty CSRF / 500 on every web page).
+echo "==> Verifying session driver (${SESSION_DRIVER:-database})..."
+php -r '
+require "vendor/autoload.php";
+$app = require "bootstrap/app.php";
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+try {
+    $store = $app->make("session")->driver();
+    $store->start();
+    $token = $store->token();
+    if (! is_string($token) || $token === "") {
+        throw new RuntimeException("Session started but CSRF token is empty");
+    }
+    echo "Session OK (token length ".strlen($token).")\n";
+} catch (Throwable $e) {
+    fwrite(STDERR, "ERROR: Session driver failed: ".$e->getMessage().PHP_EOL);
+    exit(1);
+}
+'
 
 echo "==> Caching configuration..."
 # Drop stale caches before rebuild so APP_URL / proxy fixes always apply.

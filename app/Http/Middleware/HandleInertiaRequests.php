@@ -67,34 +67,71 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => function () use ($request) {
+                    try {
+                        return $request->session()->get('success');
+                    } catch (\Throwable) {
+                        return null;
+                    }
+                },
+                'error' => function () use ($request) {
+                    try {
+                        return $request->session()->get('error');
+                    } catch (\Throwable) {
+                        return null;
+                    }
+                },
             ],
             'providerProfile' => function () use ($request) {
-                $user = $request->user();
-                if (! $user) return null;
-                $profile = $user->hoSoNhaCungCap;
-                if (! $profile) return null;
-                return [
-                    'ten_thuong_hieu' => $profile->ten_thuong_hieu,
-                    'diem_danh_gia' => (float) $profile->diem_danh_gia,
-                ];
+                try {
+                    $user = $request->user();
+                    if (! $user) {
+                        return null;
+                    }
+                    $profile = $user->hoSoNhaCungCap;
+                    if (! $profile) {
+                        return null;
+                    }
+
+                    return [
+                        'ten_thuong_hieu' => $profile->ten_thuong_hieu,
+                        'diem_danh_gia' => (float) $profile->diem_danh_gia,
+                    ];
+                } catch (\Throwable) {
+                    return null;
+                }
             },
             'unreadNotifications' => function () use ($request) {
-                $user = $request->user();
-                if (! $user) return 0;
-                return \App\Models\ThongBao::where('nguoi_dung_id', $user->id)
-                    ->where('da_doc', false)
-                    ->count();
+                try {
+                    $user = $request->user();
+                    if (! $user) {
+                        return 0;
+                    }
+
+                    return \App\Models\ThongBao::where('nguoi_dung_id', $user->id)
+                        ->where('da_doc', false)
+                        ->count();
+                } catch (\Throwable) {
+                    return 0;
+                }
             },
             'pendingBookingsCount' => function () use ($request) {
-                $user = $request->user();
-                if (! $user) return 0;
-                $role = $user->vaiTroNguoiDung?->ten_vai_tro;
-                if ($role !== 'Nhà cung cấp') return 0;
-                return \App\Models\DonDatLich::where('nha_cung_cap_id', $user->id)
-                    ->where('trang_thai_don', 'cho_xac_nhan')
-                    ->count();
+                try {
+                    $user = $request->user();
+                    if (! $user) {
+                        return 0;
+                    }
+                    $role = $user->vaiTroNguoiDung?->ten_vai_tro;
+                    if ($role !== 'Nhà cung cấp') {
+                        return 0;
+                    }
+
+                    return \App\Models\DonDatLich::where('nha_cung_cap_id', $user->id)
+                        ->where('trang_thai_don', 'cho_xac_nhan')
+                        ->count();
+                } catch (\Throwable) {
+                    return 0;
+                }
             },
         ];
     }

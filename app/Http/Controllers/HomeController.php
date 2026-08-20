@@ -146,14 +146,21 @@ class HomeController extends Controller
             ->latest()
             ->take(6)
             ->get()
-            ->map(fn ($r) => [
-                'name' => $r->an_danh ? 'Khách hàng ẩn danh' : $r->khachHang->ho_ten,
-                'avatar' => $r->khachHang->anh_dai_dien ?? 'https://i.pravatar.cc/150?u=' . $r->khach_hang_id,
-                'role' => 'Khách hàng',
-                'rating' => $r->so_sao,
-                'content' => $r->noi_dung ?? 'Dịch vụ rất tốt, tôi rất hài lòng!',
-                'service' => $r->donDatLich?->dichVu?->ten_dich_vu ?? 'Dịch vụ',
-            ]);
+            ->map(function ($r) {
+                $customer = $r->khachHang;
+
+                return [
+                    'name' => $r->an_danh || ! $customer
+                        ? 'Khách hàng ẩn danh'
+                        : ($customer->ho_ten ?: 'Khách hàng'),
+                    'avatar' => $customer?->anh_dai_dien
+                        ?? 'https://i.pravatar.cc/150?u='.($r->khach_hang_id ?? 'guest'),
+                    'role' => 'Khách hàng',
+                    'rating' => $r->so_sao,
+                    'content' => $r->noi_dung ?? 'Dịch vụ rất tốt, tôi rất hài lòng!',
+                    'service' => $r->donDatLich?->dichVu?->ten_dich_vu ?? 'Dịch vụ',
+                ];
+            });
 
         // Fallback nếu chưa có đánh giá
         $customerReviews = $reviewsFromDb->isNotEmpty() ? $reviewsFromDb->values()->all() : [

@@ -38,8 +38,10 @@ services:
           name: dalat-services-db
           property: connectionString
 
+      # file driver avoids a DB round-trip on every request (free-tier Postgres
+      # blips otherwise 500 every Inertia page with an empty CSRF token).
       - key: SESSION_DRIVER
-        value: database
+        value: file
 
       - key: SESSION_LIFETIME
         value: "120"
@@ -48,7 +50,7 @@ services:
         value: "true"
 
       - key: CACHE_STORE
-        value: database
+        value: file
 
       - key: QUEUE_CONNECTION
         value: sync

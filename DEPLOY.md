@@ -267,11 +267,12 @@ DB_URL=postgres://dalat_services:PASSWORD@dpg-xxx-a.singapore-postgres.render.co
 # DB_PASSWORD=your-password-here
 
 # ─── Session & Cache ──────────────────────────
-SESSION_DRIVER=database
+# Prefer file on Render free tier — database sessions 500 every page if DB blips.
+SESSION_DRIVER=file
 SESSION_LIFETIME=120
 SESSION_SECURE_COOKIE=true
-CACHE_STORE=database
-QUEUE_CONNECTION=database
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
 
 # ─── Security ─────────────────────────────────
 BCRYPT_ROUNDS=12
@@ -507,16 +508,17 @@ Cách sửa:
 
 `/up` không dùng session middleware; trang Inertia thì có. CSRF rỗng = session không start được, thường do:
 
-1. **DB down / Postgres free hết hạn / sai `DB_URL`** → `SESSION_DRIVER=database` fail
-2. **Migration chưa chạy** (entrypoint cũ nuốt lỗi migrate)
+1. **`SESSION_DRIVER=database` + DB down / Postgres free hết hạn / sai `DB_URL`**
+2. **Migration chưa chạy** (bảng `sessions` thiếu)
 3. **`APP_KEY` trống hoặc đổi** sau khi đã có cookie/session mã hóa
 
 Cách sửa trên Render Dashboard:
-1. Environment → xác nhận `APP_KEY` dạng `base64:...` (chạy local: `php artisan key:generate --show`)
-2. `DB_URL` trỏ đúng Postgres **Internal** URL, status DB = Available
-3. Logs → tìm `Database connection failed` / `SQLSTATE` / `APP_KEY`
-4. Sau khi DB OK: **Manual Deploy** (entrypoint mới fail-fast nếu DB/migrate lỗi)
-5. Shell (nếu service lên): `php artisan migrate --force && php artisan config:clear && php artisan config:cache`
+1. Environment → set **`SESSION_DRIVER=file`** và **`CACHE_STORE=file`** (ổn định hơn free tier)
+2. `APP_KEY` dạng `base64:...` (local: `php artisan key:generate --show`)
+3. `DB_URL` Internal URL, Postgres = Available (homepage vẫn query DB)
+4. `APP_URL=https://dalatservices.tranngochung.id.vn`
+5. **Manual Deploy → Clear build cache**
+6. Logs phải có: `Database OK`, `Session OK`, `APP_URL=https://dalatservices...`
 
 ### Lỗi "419 CSRF Token Mismatch"
 
