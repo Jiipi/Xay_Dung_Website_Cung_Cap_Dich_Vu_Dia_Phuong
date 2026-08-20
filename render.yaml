@@ -13,8 +13,10 @@ services:
       - key: APP_ENV
         value: production
 
+      # DO NOT use Render generateValue here — Laravel needs `base64:...` from
+      # `php artisan key:generate --show`. Set APP_KEY manually in the dashboard.
       - key: APP_KEY
-        generateValue: true
+        sync: false
 
       - key: APP_DEBUG
         value: "false"

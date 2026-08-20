@@ -249,7 +249,9 @@ Vào **Web Service** → **Environment** → thêm các biến:
 # ─── App ───────────────────────────────────────
 APP_NAME="Dalat Services"
 APP_ENV=production
-APP_KEY=base64:xxxxx                    # Chạy: php artisan key:generate --show
+# BẮT BUỘC format Laravel. KHÔNG dùng nút Generate của Render.
+# Local: php artisan key:generate --show  → dán nguyên chuỗi base64:...
+APP_KEY=base64:xxxxx
 APP_DEBUG=false
 APP_URL=https://dalatservices.tranngochung.id.vn
 APP_LOCALE=vi
@@ -504,21 +506,57 @@ Cách sửa:
 4. Redeploy Vercel Production
 5. Kiểm tra: `curl -I https://your-domain` phải **không** còn `Content-Type: application/x-httpd-php`
 
-### Render trả 500 mọi trang (trừ `/up`), CSRF rỗng
+### Render trả 500 mọi trang (trừ `/up`), CSRF rỗng, không Set-Cookie
 
-`/up` không dùng session middleware; trang Inertia thì có. CSRF rỗng = session không start được, thường do:
+`/up` không dùng session; mọi trang Inertia (`/`, `/about`, `/login`) đều qua session.
+CSRF rỗng + không `Set-Cookie` = **session/encryption fail trước khi render**.
 
-1. **`SESSION_DRIVER=database` + DB down / Postgres free hết hạn / sai `DB_URL`**
-2. **Migration chưa chạy** (bảng `sessions` thiếu)
-3. **`APP_KEY` trống hoặc đổi** sau khi đã có cookie/session mã hóa
+Nguyên nhân hay gặp nhất trên Render:
 
-Cách sửa trên Render Dashboard:
-1. Environment → set **`SESSION_DRIVER=file`** và **`CACHE_STORE=file`** (ổn định hơn free tier)
-2. `APP_KEY` dạng `base64:...` (local: `php artisan key:generate --show`)
-3. `DB_URL` Internal URL, Postgres = Available (homepage vẫn query DB)
-4. `APP_URL=https://dalatservices.tranngochung.id.vn`
-5. **Manual Deploy → Clear build cache**
-6. Logs phải có: `Database OK`, `Session OK`, `APP_URL=https://dalatservices...`
+1. **`APP_KEY` sai format** — Render nút Generate tạo chuỗi random, **không** phải `base64:...` của Laravel → encrypt cookie/session vỡ → 500
+2. `SESSION_DRIVER=database` + DB lỗi / thiếu bảng `sessions`
+3. `storage/framework/sessions` không ghi được (user php-fpm)
+
+#### Fix trên Render Dashboard (làm đúng thứ tự)
+
+**A. Tạo APP_KEY đúng (máy local có PHP):**
+```bash
+php artisan key:generate --show
+```
+Copy nguyên output (bắt đầu bằng `base64:`).
+
+Nếu không có PHP local, dùng PowerShell:
+```powershell
+$bytes = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+"base64:" + [Convert]::ToBase64String($bytes)
+```
+
+**B. Environment → sửa tay (blueprint không luôn ghi đè service cũ):**
+
+| Key | Value |
+|---|---|
+| `APP_KEY` | `base64:...` (vừa tạo) |
+| `APP_URL` | `https://dalatservices.tranngochung.id.vn` |
+| `SESSION_DRIVER` | `file` |
+| `CACHE_STORE` | `file` |
+| `SESSION_SECURE_COOKIE` | `true` |
+| `DB_URL` | Internal Postgres URL |
+| `APP_DEBUG` | `false` (tạm `true` 1 lần nếu cần xem stack trace) |
+
+Postgres status = **Available**.
+
+**C. Manual Deploy → Clear build cache & deploy**
+
+**D. Logs lúc boot phải có:**
+```
+Database OK
+Session OK (driver=file, token length 40)
+Boot config: APP_URL=https://dalatservices... SESSION_DRIVER=file
+APP_KEY format: OK
+```
+
+Nếu log `ERROR: APP_KEY must start with 'base64:'` → key vẫn sai, sửa lại bước A–B.
+Nếu log `Session/APP_KEY failed under www-data` → đọc message (thường là key/permission).
 
 ### Lỗi "419 CSRF Token Mismatch"
 
