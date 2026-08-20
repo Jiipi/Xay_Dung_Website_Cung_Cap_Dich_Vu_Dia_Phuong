@@ -7,6 +7,22 @@ echo "==> Bootstrapping Dalat Services..."
 
 # Normalize APP_KEY: trim whitespace + surrounding quotes (common paste mistakes).
 APP_KEY="$(printf '%s' "${APP_KEY:-}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
+
+# If the operator pasted only the 32-byte payload (44 base64 chars, often ending
+# with =) without the required Laravel "base64:" prefix, add it automatically.
+# Live log evidence: length=44 prefix='gOExMOjr4WKs...' starts_with_base64=no
+if [ -n "${APP_KEY}" ]; then
+    case "${APP_KEY}" in
+        base64:*) ;;
+        *)
+            if printf '%s' "${APP_KEY}" | grep -Eq '^[A-Za-z0-9+/]+=*$' \
+                && [ "${#APP_KEY}" -ge 43 ] && [ "${#APP_KEY}" -le 48 ]; then
+                echo "==> APP_KEY missing 'base64:' prefix — prepending automatically"
+                APP_KEY="base64:${APP_KEY}"
+            fi
+            ;;
+    esac
+fi
 export APP_KEY
 
 # Safe diagnostics (never print the full secret).
@@ -35,7 +51,7 @@ case "${APP_KEY}" in
         if [ "${#key_body}" -lt 40 ]; then
             echo "ERROR: APP_KEY looks too short after base64: prefix (${#key_body} chars)."
             echo "       Expected ~44 chars after base64:"
-            echo "       Paste: base64:gOExMOjr4WKseT3uLxXPyDK3urxuA5dAyLIPQVi31yk="
+            echo "       Paste full value including base64: prefix"
             exit 1
         fi
         ;;
@@ -47,10 +63,8 @@ case "${APP_KEY}" in
         echo "       FIX NOW (Render Dashboard):"
         echo "       1. Service → Environment"
         echo "       2. DELETE the existing APP_KEY row completely"
-        echo "       3. Add new env var:"
-        echo "            Key:   APP_KEY"
-        echo "            Value: base64:gOExMOjr4WKseT3uLxXPyDK3urxuA5dAyLIPQVi31yk="
-        echo "       4. Save Changes (wait for redeploy) OR Manual Deploy"
+        echo "       3. Add new env var Key=APP_KEY Value=base64:<44-char-payload>"
+        echo "       4. Save Changes + Manual Deploy"
         echo "       5. Logs must show: starts_with_base64=yes"
         exit 1
         ;;
