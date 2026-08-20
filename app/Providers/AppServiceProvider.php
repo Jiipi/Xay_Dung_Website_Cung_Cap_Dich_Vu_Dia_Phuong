@@ -24,6 +24,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Normalize APP_KEY before the encrypter is resolved. Render operators often
+        // paste the 32-byte payload without the required "base64:" prefix; entrypoint
+        // also fixes this for the process env, but config:cache / FPM workers need a
+        // belt-and-suspenders path inside PHP itself.
+        $rawKey = $_ENV['APP_KEY'] ?? $_SERVER['APP_KEY'] ?? null;
+        if (! is_string($rawKey) || $rawKey === '') {
+            $fromEnv = getenv('APP_KEY');
+            $rawKey = is_string($fromEnv) ? $fromEnv : null;
+        }
+        if (is_string($rawKey)) {
+            $key = trim($rawKey, " \t\n\r\0\x0B\"'");
+            if ($key !== '' && ! str_starts_with($key, 'base64:')) {
+                if (preg_match('/^[A-Za-z0-9+\/]+=*$/', $key) === 1 && strlen($key) >= 43 && strlen($key) <= 48) {
+                    $key = 'base64:'.$key;
+                    $_ENV['APP_KEY'] = $key;
+                    $_SERVER['APP_KEY'] = $key;
+                    putenv('APP_KEY='.$key);
+                }
+            }
+        }
+
         $this->app->bind(CategoryRepositoryInterface::class, EloquentCategoryRepository::class);
         $this->app->bind(BookingRepositoryInterface::class, EloquentBookingRepository::class);
         $this->app->bind(ReviewRepositoryInterface::class, EloquentReviewRepository::class);
@@ -35,6 +56,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // config:cache may have baked a payload-only APP_KEY before entrypoint
+        // normalization; repair the runtime config so the encrypter can boot.
+        $cachedKey = config('app.key');
+        if (is_string($cachedKey) && $cachedKey !== '' && ! str_starts_with($cachedKey, 'base64:')) {
+            if (preg_match('/^[A-Za-z0-9+\/]+=*$/', $cachedKey) === 1 && strlen($cachedKey) >= 43 && strlen($cachedKey) <= 48) {
+                config(['app.key' => 'base64:'.$cachedKey]);
+            }
+        }
+
         $this->configureDefaults();
     }
 

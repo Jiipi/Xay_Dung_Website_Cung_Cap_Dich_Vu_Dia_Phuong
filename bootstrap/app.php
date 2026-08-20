@@ -79,8 +79,37 @@ return Application::configure(basePath: $basePath)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Always surface the real exception class/message on Render logs.
+        // Production Inertia error pages hide the stack; empty CSRF on those
+        // pages is a symptom, not the root cause.
+        $exceptions->reportable(function (\Throwable $e): void {
+            try {
+                \Illuminate\Support\Facades\Log::error(
+                    'Unhandled '.$e::class.': '.$e->getMessage(),
+                    [
+                        'file' => $e->getFile().':'.$e->getLine(),
+                        'url' => request()->fullUrl() ?? null,
+                    ],
+                );
+            } catch (\Throwable) {
+                error_log('Unhandled '.$e::class.': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+            }
+        });
+
         $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
-            if (! app()->environment(['local', 'testing']) && in_array($response->getStatusCode(), [500, 503, 404, 403])) {
+            if (! app()->environment(['local', 'testing']) && in_array($response->getStatusCode(), [500, 503, 404, 403], true)) {
+                try {
+                    \Illuminate\Support\Facades\Log::error(
+                        'HTTP '.$response->getStatusCode().' '.$exception::class.': '.$exception->getMessage(),
+                        [
+                            'file' => $exception->getFile().':'.$exception->getLine(),
+                            'url' => $request->fullUrl(),
+                        ],
+                    );
+                } catch (\Throwable) {
+                    error_log('HTTP '.$response->getStatusCode().' '.$exception::class.': '.$exception->getMessage());
+                }
+
                 return Inertia::render('errors/Error', ['status' => $response->getStatusCode()])
                     ->toResponse($request)
                     ->setStatusCode($response->getStatusCode());

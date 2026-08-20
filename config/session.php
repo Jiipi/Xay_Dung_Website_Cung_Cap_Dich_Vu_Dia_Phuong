@@ -18,7 +18,9 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    // Prefer file on single-container hosts (Render). Database sessions 500 every
+    // web route when Postgres blips or the sessions table is missing; /up stays 200.
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------

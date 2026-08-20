@@ -549,6 +549,7 @@ Postgres status = **Available**.
 
 **D. Logs lúc boot phải có:**
 ```
+APP_KEY diagnostics: length=51 starts_with_base64=yes prefix='base64:gOEx...'
 Database OK
 Session OK (driver=file, token length 40)
 Boot config: APP_URL=https://dalatservices... SESSION_DRIVER=file
@@ -557,6 +558,12 @@ APP_KEY format: OK
 
 Nếu log `ERROR: APP_KEY must start with 'base64:'` → key vẫn sai, sửa lại bước A–B.
 Nếu log `Session/APP_KEY failed under www-data` → đọc message (thường là key/permission).
+
+**E. Nếu boot OK mà trang vẫn 500:** mở **Logs** lúc request `/about` — app ghi
+`HTTP 500 <ExceptionClass>: <message>` ra stderr (Render log stream). Không đoán CSRF.
+
+**F. APP_KEY:** dán **cả** chuỗi kể cả prefix `base64:`. Nếu chỉ dán payload
+(~44 ký tự) thì entrypoint mới sẽ tự thêm prefix.
 
 ### Lỗi "419 CSRF Token Mismatch"
 

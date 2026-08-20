@@ -51,8 +51,23 @@ services:
       - key: SESSION_SECURE_COOKIE
         value: "true"
 
+      # Encrypting the whole session payload needs a valid APP_KEY; keep false
+      # until sessions are stable. Cookie encryption still uses APP_KEY separately.
+      - key: SESSION_ENCRYPT
+        value: "false"
+
       - key: CACHE_STORE
         value: file
+
+      # stderr → Render log stream so 500 root causes are visible without Shell.
+      - key: LOG_CHANNEL
+        value: stack
+
+      - key: LOG_STACK
+        value: stderr,single
+
+      - key: LOG_LEVEL
+        value: debug
 
       - key: QUEUE_CONNECTION
         value: sync

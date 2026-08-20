@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+        {{-- rescue: error pages can render before StartSession; never fatally empty-token --}}
+        <meta name="csrf-token" content="{{ rescue(fn () => csrf_token() ?: '', '', report: false) }}">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
